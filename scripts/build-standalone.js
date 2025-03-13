@@ -48,6 +48,8 @@ function readMainFile(filePath) {
   return content
     // Remove imports
     .replace(/import\s+\{\s*[^}]+\}\s+from\s+['"][^'"]+['"];?/g, '')
+    // Remove export default statement
+    .replace(/export\s+default\s+\w+\s*;?/g, '')
     // Make FormChippy global
     .replace(/class FormChippy/g, 'window.FormChippy = class FormChippy');
 }
@@ -92,6 +94,9 @@ function buildStandalone() {
   
   // Close IIFE
   output += '})();';
+  
+  // Final check to make sure no export statements remain
+  output = output.replace(/export\s+default\s+\w+\s*;?/g, '');
   
   // Write to file
   fs.writeFileSync(targetFile, output);

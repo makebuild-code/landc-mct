@@ -4640,7 +4640,7 @@ window.formChippy = {
     }
 };
 
-export default FormChippy;
+
 
 
 
