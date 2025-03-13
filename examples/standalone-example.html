@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormChippy Standalone Example</title>
+    
+    <!-- Import FormChippy CSS -->
+    <link rel="stylesheet" href="../dist/css/formchippy.css">
+    
+    <!-- Additional styles for this example -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        h1, h2, h3 {
+            margin-top: 0;
+        }
+        
+        .title {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .form-wrapper {
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        [data-fc-slide] {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        /* Custom styles for the floating navigation buttons */
+        .floating-nav {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            z-index: 100;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .floating-nav button {
+            background: #4a6cf7;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .floating-nav button:hover {
+            background: #3451b2;
+        }
+        
+        .floating-nav button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* Custom pagination dots style */
+        [data-fc-dots] {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        [data-fc-dot] {
+            width: 10px;
+            height: 10px;
+            background: #ccc;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        [data-fc-dot].active {
+            background: #4a6cf7;
+            transform: scale(1.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">
+            <h1>FormChippy Standalone Example</h1>
+            <p>This example uses the standalone version of FormChippy that doesn't require module imports.</p>
+        </div>
+        
+        <div class="form-wrapper">
+            <div
+                data-fc-container="demo-form"
+                data-fc-debuglog="true"
+                data-fc-validate="false"
+            >
+                <!-- Floating navigation buttons fixed at bottom left -->
+                <div class="floating-nav">
+                    <button data-fc-button-prev>Previous</button>
+                    <button data-fc-button-next>Next</button>
+                </div>
+                
+                <!-- Container for pagination dots (positioned at bottom right) -->
+                <div data-fc-dots>
+                    <!-- Template dot (will be used as template for generating all dots) -->
+                    <div data-fc-dot class="dot-template"></div>
+                </div>
+                
+                <!-- Slide list container -->
+                <div data-fc-slide-list>
+                    <!-- Slide 1 -->
+                    <section data-fc-slide="welcome">
+                        <h2>Welcome to FormChippy!</h2>
+                        <p>This is a smooth, multi-step form library with Typeform-style navigation.</p>
+                        <p>Navigate using the buttons or dots at the bottom.</p>
+                    </section>
+                    
+                    <!-- Slide 2 -->
+                    <section data-fc-slide="name">
+                        <h2>What's your name?</h2>
+                        <input
+                            type="text"
+                            placeholder="Your full name"
+                            data-fc-input="name"
+                            style="font-size: 1.2rem; padding: 0.8rem; margin-top: 1rem; width: 100%; max-width: 400px;"
+                        >
+                    </section>
+                    
+                    <!-- Slide 3 -->
+                    <section data-fc-slide="email">
+                        <h2>What's your email?</h2>
+                        <input
+                            type="email"
+                            placeholder="your@email.com"
+                            data-fc-input="email"
+                            style="font-size: 1.2rem; padding: 0.8rem; margin-top: 1rem; width: 100%; max-width: 400px;"
+                        >
+                    </section>
+                    
+                    <!-- Slide 4 -->
+                    <section data-fc-slide="interests">
+                        <h2>What are you interested in?</h2>
+                        <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" data-fc-input="interests" value="web-development">
+                                Web Development
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" data-fc-input="interests" value="mobile-apps">
+                                Mobile Apps
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" data-fc-input="interests" value="design">
+                                Design
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" data-fc-input="interests" value="marketing">
+                                Marketing
+                            </label>
+                        </div>
+                    </section>
+                    
+                    <!-- Slide 5 -->
+                    <section data-fc-slide="thank-you">
+                        <h2>Thank you!</h2>
+                        <p>Your response has been recorded.</p>
+                        <button
+                            data-fc-button-reset
+                            style="background: #4a6cf7; color: white; border: none; border-radius: 4px; padding: 0.8rem 1.5rem; margin-top: 1rem; cursor: pointer;"
+                        >
+                            Start Over
+                        </button>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Include the standalone version of FormChippy -->
+    <script src="../dist/formchippy.standalone.js"></script>
+</body>
+</html>

@@ -5,7 +5,8 @@
   "main": "dist/formchippy.js",
   "scripts": {
     "dev": "http-server -p 3000 -c-1",
-    "build": "mkdir -p dist/css && cp -r src/js/* dist/ && cp -r src/css dist/",
+    "build": "mkdir -p dist/css && cp -r src/js/* dist/ && cp -r src/css dist/ && node scripts/build-standalone.js",
+    "build:standalone": "node scripts/build-standalone.js",
     "watch": "nodemon --watch src -e js,css,html --exec 'npm run build'",
     "start": "npm run build && npm run dev"
   },
