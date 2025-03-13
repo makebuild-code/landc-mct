@@ -1,113 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FormChippy Standalone Example</title>
-    
-    <!-- Import FormChippy CSS -->
-    <link rel="stylesheet" href="../dist/css/formchippy.css">
-    
-    <!-- Additional styles for this example -->
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        
-        h1, h2, h3 {
-            margin-top: 0;
-        }
-        
-        .title {
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
-        .form-wrapper {
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        [data-fc-slide] {
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        
-        /* Custom styles for the floating navigation buttons */
-        .floating-nav {
-            position: fixed;
-            bottom: 2rem;
-            left: 2rem;
-            z-index: 100;
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .floating-nav button {
-            background: #4a6cf7;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 0.5rem 1.2rem;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .floating-nav button:hover {
-            background: #3451b2;
-        }
-        
-        .floating-nav button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        /* Custom pagination dots style */
-        [data-fc-dots] {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        [data-fc-dot] {
-            width: 10px;
-            height: 10px;
-            background: #ccc;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        [data-fc-dot].active {
-            background: #4a6cf7;
-            transform: scale(1.3);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="title">
-            <h1>FormChippy Standalone Example</h1>
-            <p>This example uses the standalone version of FormChippy that doesn't require module imports.</p>
-        </div>
-        
-        <div class="form-wrapper">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>FormChippy Standalone Example</title>
+
+        <!-- FormChippy CSS -->
+        <link rel="stylesheet" href="../dist/css/formchippy.css" />
+
+        <!-- If CSS doesn't exist in dist yet, fallback to src -->
+        <script>
+            ;(function () {
+                var link = document.querySelector(
+                    'link[href="../dist/css/formchippy.css"]'
+                )
+                link.addEventListener('error', function () {
+                    console.warn(
+                        'CSS not found in dist, falling back to src version'
+                    )
+                    link.href = '../src/css/formchippy.css'
+                })
+            })()
+        </script>
+
+        <style>
+            /* Basic page styling */
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                    Roboto, Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f7;
+                color: #333;
+            }
+
+            /* Clean progress bar styling */
+            .visible-progress {
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                width: calc(100% - 2rem);
+                z-index: 100;
+                max-width: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Progress wrap styling */
+            .fc-progress-wrap,
+            [data-fc-progress-wrap] {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                max-width: none;
+            }
+
+            /* Progress bar background */
+            .fc-progress-bar,
+            [data-fc-progress-bar] {
+                height: 20px;
+                background-color: #e0e0e0;
+                border: 2px solid #000;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            /* Progress fill */
+            .fc-progress-fill,
+            [data-fc-progress-fill] {
+                background-color: #ff5722; /* Bright orange for visibility */
+                height: 100%;
+                min-width: 5px;
+            }
+
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+
+            h1 {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            /* FormChippy question styling */
+            [data-fc-question] {
+                margin-bottom: 30px;
+            }
+
+            [data-fc-question] label {
+                display: block;
+                margin-bottom: 10px;
+                font-weight: 600;
+            }
+
+            .results {
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                margin-top: 20px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            #formResults {
+                white-space: pre-wrap;
+                font-family: monospace;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>FormChippy Demo (Standalone)</h1>
+
+            <!-- FormChippy Form -->
             <div
                 data-fc-container="demo-form"
                 data-fc-debuglog="true"
@@ -115,87 +121,318 @@
             >
                 <!-- Floating navigation buttons fixed at bottom left -->
                 <div class="floating-nav">
-                    <button data-fc-button-prev>Previous</button>
-                    <button data-fc-button-next>Next</button>
+                    <button data-fc-button="prev" class="float-btn">
+                        ← Prev
+                    </button>
+                    <button data-fc-button="next" class="float-btn">
+                        Next →
+                    </button>
                 </div>
-                
-                <!-- Container for pagination dots (positioned at bottom right) -->
-                <div data-fc-dots>
-                    <!-- Template dot (will be used as template for generating all dots) -->
-                    <div data-fc-dot class="dot-template"></div>
-                </div>
-                
-                <!-- Slide list container -->
-                <div data-fc-slide-list>
-                    <!-- Slide 1 -->
-                    <section data-fc-slide="welcome">
-                        <h2>Welcome to FormChippy!</h2>
-                        <p>This is a smooth, multi-step form library with Typeform-style navigation.</p>
-                        <p>Navigate using the buttons or dots at the bottom.</p>
-                    </section>
-                    
-                    <!-- Slide 2 -->
-                    <section data-fc-slide="name">
-                        <h2>What's your name?</h2>
-                        <input
-                            type="text"
-                            placeholder="Your full name"
-                            data-fc-input="name"
-                            style="font-size: 1.2rem; padding: 0.8rem; margin-top: 1rem; width: 100%; max-width: 400px;"
-                        >
-                    </section>
-                    
-                    <!-- Slide 3 -->
-                    <section data-fc-slide="email">
-                        <h2>What's your email?</h2>
-                        <input
-                            type="email"
-                            placeholder="your@email.com"
-                            data-fc-input="email"
-                            style="font-size: 1.2rem; padding: 0.8rem; margin-top: 1rem; width: 100%; max-width: 400px;"
-                        >
-                    </section>
-                    
-                    <!-- Slide 4 -->
-                    <section data-fc-slide="interests">
-                        <h2>What are you interested in?</h2>
-                        <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem;">
-                            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="checkbox" data-fc-input="interests" value="web-development">
-                                Web Development
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="checkbox" data-fc-input="interests" value="mobile-apps">
-                                Mobile Apps
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="checkbox" data-fc-input="interests" value="design">
-                                Design
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="checkbox" data-fc-input="interests" value="marketing">
-                                Marketing
-                            </label>
+                <!-- Progress indicator with explicitly placed divs -->
+                <div data-fc-progress class="visible-progress">
+                    <div
+                        class="fc-progress-wrap"
+                        data-fc-progress-wrap
+                        role="progressbar"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-valuenow="0"
+                    >
+                        <div class="fc-progress-bar" data-fc-progress-bar>
+                            <div
+                                class="fc-progress-fill"
+                                data-fc-progress-fill
+                            ></div>
                         </div>
-                    </section>
-                    
-                    <!-- Slide 5 -->
-                    <section data-fc-slide="thank-you">
-                        <h2>Thank you!</h2>
-                        <p>Your response has been recorded.</p>
-                        <button
-                            data-fc-button-reset
-                            style="background: #4a6cf7; color: white; border: none; border-radius: 4px; padding: 0.8rem 1.5rem; margin-top: 1rem; cursor: pointer;"
-                        >
-                            Start Over
-                        </button>
-                    </section>
+                    </div>
                 </div>
+
+                <!-- Navigation dots -->
+                <div data-fc-dots>
+                    <div data-fc-dot class="fc-dot"></div>
+                </div>
+
+                <!-- Slide list to contain all slides -->
+                <div data-fc-slide-list>
+                    <!-- Slide 1: Introduction -->
+                    <div data-fc-slide="intro">
+                        <div data-fc-content>
+                            <h2>Welcome to FormChippy</h2>
+                            <p>
+                                This is a simple demonstration of FormChippy's
+                                capabilities. Let's get started!
+                            </p>
+
+                            <div class="fc-button-group">
+                                <button data-fc-button="next">Start</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 2: Basic Text Input -->
+                    <div data-fc-slide="basic-info">
+                        <div data-fc-content>
+                            <h2>Basic Information</h2>
+
+                            <div data-fc-question>
+                                <label for="name">What's your name?</label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    data-fc-input
+                                    required
+                                />
+                            </div>
+
+                            <div data-fc-question>
+                                <label for="email">Email address</label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    data-fc-input
+                                    required
+                                />
+                            </div>
+
+                            <div class="fc-button-group">
+                                <button data-fc-button="prev">Back</button>
+                                <button data-fc-button="next">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3: Radio Options -->
+                    <div data-fc-slide="preferences">
+                        <div data-fc-content>
+                            <h2>Preferences</h2>
+
+                            <div data-fc-question>
+                                <label>What's your preferred contact method?</label>
+                                <div class="radio-group">
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="contact"
+                                            value="email"
+                                            data-fc-input
+                                        />
+                                        Email
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="contact"
+                                            value="phone"
+                                            data-fc-input
+                                        />
+                                        Phone
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="contact"
+                                            value="text"
+                                            data-fc-input
+                                        />
+                                        Text message
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="fc-button-group">
+                                <button data-fc-button="prev">Back</button>
+                                <button data-fc-button="next">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4: Checkboxes -->
+                    <div data-fc-slide="features">
+                        <div data-fc-content>
+                            <h2>Select Features</h2>
+
+                            <div data-fc-question>
+                                <label>Which features are you interested in?</label>
+                                <div class="checkbox-group">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            name="features"
+                                            value="analytics"
+                                            data-fc-input
+                                        />
+                                        Analytics
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            name="features"
+                                            value="automation"
+                                            data-fc-input
+                                        />
+                                        Automation
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            name="features"
+                                            value="reports"
+                                            data-fc-input
+                                        />
+                                        Reports
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            name="features"
+                                            value="integrations"
+                                            data-fc-input
+                                        />
+                                        Integrations
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="fc-button-group">
+                                <button data-fc-button="prev">Back</button>
+                                <button data-fc-button="next">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 5: File Upload -->
+                    <div data-fc-slide="documents">
+                        <div data-fc-content>
+                            <h2>Documents</h2>
+
+                            <div data-fc-question>
+                                <label for="resume">Upload your resume</label>
+                                <input
+                                    type="file"
+                                    id="resume"
+                                    name="resume"
+                                    data-fc-input
+                                />
+                            </div>
+
+                            <div data-fc-question>
+                                <label for="notes">Additional notes</label>
+                                <textarea
+                                    id="notes"
+                                    name="notes"
+                                    rows="4"
+                                    data-fc-input
+                                ></textarea>
+                            </div>
+
+                            <div class="fc-button-group">
+                                <button data-fc-button="prev">Back</button>
+                                <button data-fc-button="next">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 6: Thank You / Completion -->
+                    <div data-fc-slide="thank-you">
+                        <div data-fc-content>
+                            <h2>Thank You!</h2>
+                            <p>Your submission has been received.</p>
+                            <p>
+                                Here's a summary of what you submitted (via the
+                                FormChippy data object):
+                            </p>
+
+                            <div class="results">
+                                <div id="formResults"></div>
+                            </div>
+
+                            <div class="fc-button-group">
+                                <button data-fc-button="reset">Start Over</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End of slide-list -->
             </div>
         </div>
-    </div>
-    
-    <!-- Include the standalone version of FormChippy -->
-    <script src="../dist/formchippy.standalone.js"></script>
-</body>
+
+        <!-- FormChippy Script - Standalone version that doesn't require modules -->
+        <script src="../dist/formchippy.standalone.js"></script>
+        
+        <!-- Script to display form data in the thank-you slide -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Get the FormChippy instance after it's initialized
+                setTimeout(function() {
+                    // Find the form container
+                    const formContainer = document.querySelector('[data-fc-container="demo-form"]');
+                    if (!formContainer) return;
+                    
+                    // Get the form instance from the DOM element
+                    const form = formContainer._formChippy;
+                    if (!form) return;
+                    
+                    // Listen for slide changes
+                    form.on('slideChange', function(slideId) {
+                        // If we're on the thank-you slide, display the form data
+                        if (slideId === 'thank-you') {
+                            const resultsElement = document.getElementById('formResults');
+                            if (resultsElement) {
+                                // Format the data as JSON with 2 spaces indentation
+                                resultsElement.textContent = JSON.stringify(form.getData(), null, 2);
+                            }
+                        }
+                    });
+                }, 500); // Short delay to ensure FormChippy is initialized
+            });
+        </script>
+
+        <style>
+            /* Styles for floating navigation buttons */
+            .floating-nav {
+                position: fixed;
+                bottom: 30px;
+                left: 30px;
+                z-index: 1000;
+                display: flex;
+                gap: 10px;
+                filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2));
+            }
+
+            .float-btn {
+                background-color: var(--fc-primary-color, #3498db);
+                color: white;
+                border: none;
+                border-radius: 30px;
+                padding: 12px 24px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-weight: 600;
+                font-size: 1rem;
+            }
+
+            .float-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            .float-btn.fc-button-disabled {
+                background-color: #aaa;
+                transform: none;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+        </style>
+
+        <!-- That's it! Everything is handled by data attributes.
+             FormChippy auto-initializes and handles:
+             - Form navigation
+             - Data collection
+             - Validation
+             - Progress tracking
+             - Form reset
+        -->
+    </body>
 </html>
