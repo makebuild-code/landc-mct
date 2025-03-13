@@ -107,6 +107,41 @@
                 font-family: monospace;
                 font-size: 14px;
             }
+
+            /* Styles for floating navigation buttons */
+            .floating-nav {
+                position: fixed;
+                bottom: 30px;
+                left: 30px;
+                z-index: 1000;
+                display: flex;
+                gap: 10px;
+                filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2));
+            }
+
+            .float-btn {
+                background-color: var(--fc-primary-color, #3498db);
+                color: white;
+                border: none;
+                border-radius: 30px;
+                padding: 12px 24px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-weight: 600;
+                font-size: 1rem;
+            }
+
+            .float-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            .float-btn.fc-button-disabled {
+                background-color: #aaa;
+                transform: none;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
         </style>
     </head>
     <body>
@@ -428,44 +463,6 @@
             type="module"
             src="http://127.0.0.1:5500/dist/formchippy.js"
         ></script>
-
-        <style>
-            /* Styles for floating navigation buttons */
-            .floating-nav {
-                position: fixed;
-                bottom: 30px;
-                left: 30px;
-                z-index: 1000;
-                display: flex;
-                gap: 10px;
-                filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2));
-            }
-
-            .float-btn {
-                background-color: var(--fc-primary-color, #3498db);
-                color: white;
-                border: none;
-                border-radius: 30px;
-                padding: 12px 24px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-                cursor: pointer;
-                transition: all 0.3s ease;
-                font-weight: 600;
-                font-size: 1rem;
-            }
-
-            .float-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-            }
-
-            .float-btn.fc-button-disabled {
-                background-color: #aaa;
-                transform: none;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-        </style>
-
         <!-- That's it! Everything is handled by data attributes.
              FormChippy auto-initializes and handles:
              - Form navigation

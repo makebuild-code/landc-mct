@@ -4,7 +4,8 @@
  * Created for L&C Mortgage Finder
  *
  * @license MIT
- * @author JP
+ * @author JP Dionisio
+ * Copyright (c) 2025 JP Dionisio
  */
 
 // Import core modules

@@ -3,7 +3,8 @@
  * A smooth, vertical scrolling multi-step form experience
  * 
  * @license MIT
- * @author JP
+ * @author JP Dionisio
+ * Copyright (c) 2025 JP Dionisio
  */
 (function() {
   'use strict';

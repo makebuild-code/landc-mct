@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>FormChippy Standalone Example</title>
+        <title>FormChippy Basic Example</title>
 
         <!-- FormChippy CSS -->
         <link rel="stylesheet" href="../dist/css/formchippy.css" />
@@ -107,11 +107,46 @@
                 font-family: monospace;
                 font-size: 14px;
             }
+
+            /* Styles for floating navigation buttons */
+            .floating-nav {
+                position: fixed;
+                bottom: 30px;
+                left: 30px;
+                z-index: 1000;
+                display: flex;
+                gap: 10px;
+                filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2));
+            }
+
+            .float-btn {
+                background-color: var(--fc-primary-color, #3498db);
+                color: white;
+                border: none;
+                border-radius: 30px;
+                padding: 12px 24px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-weight: 600;
+                font-size: 1rem;
+            }
+
+            .float-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            .float-btn.fc-button-disabled {
+                background-color: #aaa;
+                transform: none;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>FormChippy Demo (Standalone)</h1>
+            <h1>FormChippy Demo</h1>
 
             <!-- FormChippy Form -->
             <div
@@ -206,38 +241,45 @@
                     <!-- Slide 3: Radio Options -->
                     <div data-fc-slide="preferences">
                         <div data-fc-content>
-                            <h2>Preferences</h2>
+                            <h2>Your Preferences</h2>
 
                             <div data-fc-question>
-                                <label>What's your preferred contact method?</label>
-                                <div class="radio-group">
-                                    <label>
+                                <label>Which option do you prefer?</label>
+
+                                <div class="fc-radio-group">
+                                    <div class="fc-radio-option">
                                         <input
                                             type="radio"
-                                            name="contact"
-                                            value="email"
+                                            id="option1"
+                                            name="preference"
+                                            value="option1"
                                             data-fc-input
+                                            required
                                         />
-                                        Email
-                                    </label>
-                                    <label>
+                                        <label for="option1">Option 1</label>
+                                    </div>
+
+                                    <div class="fc-radio-option">
                                         <input
                                             type="radio"
-                                            name="contact"
-                                            value="phone"
+                                            id="option2"
+                                            name="preference"
+                                            value="option2"
                                             data-fc-input
                                         />
-                                        Phone
-                                    </label>
-                                    <label>
+                                        <label for="option2">Option 2</label>
+                                    </div>
+
+                                    <div class="fc-radio-option">
                                         <input
                                             type="radio"
-                                            name="contact"
-                                            value="text"
+                                            id="option3"
+                                            name="preference"
+                                            value="option3"
                                             data-fc-input
                                         />
-                                        Text message
-                                    </label>
+                                        <label for="option3">Option 3</label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -248,50 +290,47 @@
                         </div>
                     </div>
 
-                    <!-- Slide 4: Checkboxes -->
+                    <!-- Slide 4: Toggle Example -->
                     <div data-fc-slide="features">
                         <div data-fc-content>
                             <h2>Select Features</h2>
 
                             <div data-fc-question>
-                                <label>Which features are you interested in?</label>
-                                <div class="checkbox-group">
-                                    <label>
+                                <label>Which features would you like?</label>
+
+                                <div class="fc-toggle-group">
+                                    <div class="fc-toggle-option">
                                         <input
                                             type="checkbox"
+                                            id="feature1"
                                             name="features"
-                                            value="analytics"
+                                            value="feature1"
                                             data-fc-input
                                         />
-                                        Analytics
-                                    </label>
-                                    <label>
+                                        <label for="feature1">Feature 1</label>
+                                    </div>
+
+                                    <div class="fc-toggle-option">
                                         <input
                                             type="checkbox"
+                                            id="feature2"
                                             name="features"
-                                            value="automation"
+                                            value="feature2"
                                             data-fc-input
                                         />
-                                        Automation
-                                    </label>
-                                    <label>
+                                        <label for="feature2">Feature 2</label>
+                                    </div>
+
+                                    <div class="fc-toggle-option">
                                         <input
                                             type="checkbox"
+                                            id="feature3"
                                             name="features"
-                                            value="reports"
+                                            value="feature3"
                                             data-fc-input
                                         />
-                                        Reports
-                                    </label>
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            name="features"
-                                            value="integrations"
-                                            data-fc-input
-                                        />
-                                        Integrations
-                                    </label>
+                                        <label for="feature3">Feature 3</label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -302,54 +341,115 @@
                         </div>
                     </div>
 
-                    <!-- Slide 5: File Upload -->
-                    <div data-fc-slide="documents">
+                    <!-- Slide 5: Textarea Example -->
+                    <div data-fc-slide="comments">
                         <div data-fc-content>
-                            <h2>Documents</h2>
+                            <h2>Additional Comments</h2>
 
                             <div data-fc-question>
-                                <label for="resume">Upload your resume</label>
-                                <input
-                                    type="file"
-                                    id="resume"
-                                    name="resume"
-                                    data-fc-input
-                                />
-                            </div>
-
-                            <div data-fc-question>
-                                <label for="notes">Additional notes</label>
+                                <label for="comments"
+                                    >Do you have any additional comments?</label
+                                >
                                 <textarea
-                                    id="notes"
-                                    name="notes"
-                                    rows="4"
+                                    id="comments"
+                                    name="comments"
                                     data-fc-input
+                                    data-fc-textarea
+                                    data-fc-auto-resize
+                                    data-fc-char-count
+                                    rows="4"
                                 ></textarea>
                             </div>
 
                             <div class="fc-button-group">
                                 <button data-fc-button="prev">Back</button>
-                                <button data-fc-button="next">Submit</button>
+                                <button data-fc-button="next">Continue</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Slide 6: Thank You / Completion -->
-                    <div data-fc-slide="thank-you">
+                    <!-- Slide 6: Date Example -->
+                    <div data-fc-slide="schedule">
                         <div data-fc-content>
-                            <h2>Thank You!</h2>
-                            <p>Your submission has been received.</p>
-                            <p>
-                                Here's a summary of what you submitted (via the
-                                FormChippy data object):
-                            </p>
+                            <h2>Schedule</h2>
 
-                            <div class="results">
-                                <div id="formResults"></div>
+                            <div data-fc-question>
+                                <label for="meeting-date"
+                                    >Select a date for our meeting</label
+                                >
+                                <input
+                                    type="date"
+                                    id="meeting-date"
+                                    name="meetingDate"
+                                    data-fc-input
+                                    data-fc-date
+                                    data-fc-enhanced
+                                />
                             </div>
 
                             <div class="fc-button-group">
-                                <button data-fc-button="reset">Start Over</button>
+                                <button data-fc-button="prev">Back</button>
+                                <button data-fc-button="next">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 7: File Upload Example -->
+                    <div data-fc-slide="documents">
+                        <div data-fc-content>
+                            <h2>Documents</h2>
+
+                            <div data-fc-question>
+                                <label for="document">Upload a document</label>
+                                <input
+                                    type="file"
+                                    id="document"
+                                    name="document"
+                                    data-fc-input
+                                    data-fc-file
+                                    data-fc-dropzone
+                                    data-fc-preview
+                                    accept=".pdf,.doc,.docx,.jpg,.png"
+                                />
+                            </div>
+
+                            <div class="fc-button-group">
+                                <button data-fc-button="prev">Back</button>
+                                <button
+                                    data-fc-button="next"
+                                    data-fc-go-to="thank-you"
+                                >
+                                    Submit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 8: Thank You -->
+                    <div
+                        data-fc-slide="thank-you"
+                        data-fc-result-display="true"
+                    >
+                        <div data-fc-content>
+                            <h2>Thank You!</h2>
+                            <p>Your form has been submitted successfully.</p>
+
+                            <div class="results">
+                                <h3>Form Results:</h3>
+                                <pre
+                                    id="formResults"
+                                    data-fc-result-target
+                                ></pre>
+                            </div>
+
+                            <div class="fc-button-group">
+                                <button data-fc-button="prev">Back</button>
+                                <button
+                                    data-fc-button="reset"
+                                    data-fc-go-to="intro"
+                                >
+                                    Start Over
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -358,74 +458,8 @@
             </div>
         </div>
 
-        <!-- FormChippy Script - Standalone version that doesn't require modules -->
-        <script src="../dist/formchippy.standalone.js"></script>
-        
-        <!-- Script to display form data in the thank-you slide -->
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Get the FormChippy instance after it's initialized
-                setTimeout(function() {
-                    // Find the form container
-                    const formContainer = document.querySelector('[data-fc-container="demo-form"]');
-                    if (!formContainer) return;
-                    
-                    // Get the form instance from the DOM element
-                    const form = formContainer._formChippy;
-                    if (!form) return;
-                    
-                    // Listen for slide changes
-                    form.on('slideChange', function(slideId) {
-                        // If we're on the thank-you slide, display the form data
-                        if (slideId === 'thank-you') {
-                            const resultsElement = document.getElementById('formResults');
-                            if (resultsElement) {
-                                // Format the data as JSON with 2 spaces indentation
-                                resultsElement.textContent = JSON.stringify(form.getData(), null, 2);
-                            }
-                        }
-                    });
-                }, 500); // Short delay to ensure FormChippy is initialized
-            });
-        </script>
-
-        <style>
-            /* Styles for floating navigation buttons */
-            .floating-nav {
-                position: fixed;
-                bottom: 30px;
-                left: 30px;
-                z-index: 1000;
-                display: flex;
-                gap: 10px;
-                filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2));
-            }
-
-            .float-btn {
-                background-color: var(--fc-primary-color, #3498db);
-                color: white;
-                border: none;
-                border-radius: 30px;
-                padding: 12px 24px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-                cursor: pointer;
-                transition: all 0.3s ease;
-                font-weight: 600;
-                font-size: 1rem;
-            }
-
-            .float-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-            }
-
-            .float-btn.fc-button-disabled {
-                background-color: #aaa;
-                transform: none;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-        </style>
-
+        <!-- FormChippy Standalone Script - Just include the library and it auto-initializes -->
+        <script type="module" src="../dist/formchippy.standalone.js"></script>
         <!-- That's it! Everything is handled by data attributes.
              FormChippy auto-initializes and handles:
              - Form navigation
