@@ -1,0 +1,311 @@
+/**
+ * Progress styles for FormChippy
+ * Styles for progress indicators, navigation dots, and step counters
+ */
+
+/* Progress container */
+.fc-progress,
+[data-fc-progress] {
+    position: fixed;
+    top: 20px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    pointer-events: none; /* Allow clicks to pass through container */
+}
+
+/* Progress wrap - outer container */
+.fc-progress-wrap,
+[data-fc-progress-wrap] {
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+    padding: 0;
+    margin: 0 auto;
+}
+
+/* Progress bar - the container */
+.fc-progress-bar,
+[data-fc-progress-bar] {
+    width: 100%;
+    height: 12px; /* Increased height */
+    background-color: var(--fc-background-dark); /* Updated background color */
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+@media (max-width: 768px) {
+    .fc-progress-wrap,
+    [data-fc-progress-wrap] {
+        width: 90%;
+    }
+}
+
+/* Progress bar fill - the actual progress indicator */
+.fc-progress-fill,
+[data-fc-progress-fill] {
+    position: absolute;
+    height: 100%;
+    background-color: var(--fc-primary-color);
+    left: 0;
+    top: 0;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Smoother transition */
+    border-radius: 999px; /* Match container */
+}
+
+/* Progress percentage */
+.fc-progress-percent,
+[data-fc-progress-percent] {
+    font-size: 0.875rem;
+    color: var(--fc-text-color);
+    margin-left: 10px;
+    font-weight: 500;
+}
+
+/* Progress step counter */
+.fc-step-counter,
+[data-fc-step-counter] {
+    font-size: 0.875rem;
+    color: var(--fc-text-secondary);
+    margin-right: 10px;
+    font-weight: 500;
+}
+
+/* Navigation dots container */
+.fc-dots,
+[data-fc-dots] {
+    position: fixed;
+    top: 50%;
+    right: 30px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 50;
+}
+
+@media (max-width: 991px) {
+    .fc-dots,
+    [data-fc-dots] {
+        right: 15px;
+    }
+}
+
+/* Individual navigation dot */
+.fc-dot,
+[data-fc-dot] {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--fc-inactive-color);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    pointer-events: auto; /* Enable clicking on dots */
+}
+
+.fc-dot:hover,
+[data-fc-dot]:hover {
+    transform: scale(1.2);
+}
+
+/* Active navigation dot */
+.fc-dot.fc-slideactive,
+[data-fc-dot].fc-slideactive,
+.fc-slideactive[data-fc-dot] {
+    background-color: var(--fc-primary-color);
+    transform: scale(1.2);
+    box-shadow: 0 0 0 2px rgba(var(--fc-primary-color-rgb, 0, 112, 243), 0.3);
+}
+
+/* Completed navigation dot */
+.fc-dot.completed,
+[data-fc-dot].completed {
+    background-color: var(--fc-success-color);
+}
+
+/* Dot labels */
+.fc-dot-label,
+[data-fc-dot-label] {
+    position: absolute;
+    right: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.3s ease;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    pointer-events: none;
+}
+
+.fc-dot:hover .fc-dot-label,
+[data-fc-dot]:hover [data-fc-dot-label] {
+    opacity: 1;
+    right: 30px;
+}
+
+/* Horizontal dots layout */
+.fc-dots-horizontal,
+[data-fc-dots-horizontal] {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 15px;
+    z-index: 50;
+}
+
+.fc-dots-horizontal .fc-dot-label,
+[data-fc-dots-horizontal] [data-fc-dot-label] {
+    right: auto;
+    top: auto;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.fc-dots-horizontal .fc-dot:hover .fc-dot-label,
+[data-fc-dots-horizontal] [data-fc-dot]:hover [data-fc-dot-label] {
+    right: auto;
+    bottom: 30px;
+}
+
+/* Step indicators */
+.fc-step-indicator,
+[data-fc-step-indicator] {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: 600px;
+    padding: 0 20px;
+    position: relative;
+    margin-bottom: 40px;
+}
+
+.fc-step-indicator::before,
+[data-fc-step-indicator]::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 40px;
+    right: 40px;
+    height: 2px;
+    background-color: var(--fc-inactive-color);
+    z-index: 1;
+}
+
+.fc-step,
+[data-fc-step] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.fc-step-circle,
+[data-fc-step-circle] {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: var(--fc-inactive-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: 600;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.fc-step.fc-slideactive .fc-step-circle,
+[data-fc-step].fc-slideactive [data-fc-step-circle] {
+    background-color: var(--fc-primary-color);
+    transform: scale(1.1);
+}
+
+.fc-step.completed .fc-step-circle,
+[data-fc-step].completed [data-fc-step-circle] {
+    background-color: var(--fc-success-color);
+}
+
+.fc-step-label,
+[data-fc-step-label] {
+    font-size: 0.75rem;
+    color: var(--fc-text-secondary);
+    text-align: center;
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fc-step.fc-slideactive .fc-step-label,
+[data-fc-step].fc-slideactive [data-fc-step-label] {
+    color: var(--fc-primary-color);
+    font-weight: 500;
+}
+
+.fc-step.completed .fc-step-label,
+[data-fc-step].completed [data-fc-step-label] {
+    color: var(--fc-success-color);
+}
+
+/* Progress indicator with percentage text */
+.fc-progress-indicator,
+[data-fc-progress-indicator] {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    margin-bottom: 20px;
+}
+
+.fc-progress-circle,
+[data-fc-progress-circle] {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.fc-progress-circle-bg,
+[data-fc-progress-circle-bg] {
+    fill: none;
+    stroke: var(--fc-inactive-color);
+    stroke-width: 4;
+}
+
+.fc-progress-circle-fill,
+[data-fc-progress-circle-fill] {
+    fill: none;
+    stroke: var(--fc-primary-color);
+    stroke-width: 4;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.fc-progress-text,
+[data-fc-progress-text] {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--fc-text-color);
+}

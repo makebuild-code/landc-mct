@@ -1,0 +1,110 @@
+/**
+ * FormChippy - Date input styling
+ */
+
+/* Default date input styling */
+input[type="date"][data-fc-input],
+input[type="time"][data-fc-input],
+input[type="datetime-local"][data-fc-input],
+input[data-fc-date] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--fc-border-color, #d1d5db);
+  border-radius: var(--fc-border-radius, 4px);
+  background-color: var(--fc-input-bg, #f9fafb);
+  color: var(--fc-text-color, #1f2937);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="date"][data-fc-input]:focus,
+input[type="time"][data-fc-input]:focus,
+input[type="datetime-local"][data-fc-input]:focus,
+input[data-fc-date]:focus {
+  outline: none;
+  border-color: var(--fc-primary-color, #2563eb);
+  box-shadow: 0 0 0 3px var(--fc-primary-shadow, rgba(37, 99, 235, 0.1));
+}
+
+input[type="date"][data-fc-input].fc-error,
+input[type="time"][data-fc-input].fc-error,
+input[type="datetime-local"][data-fc-input].fc-error,
+input[data-fc-date].fc-error {
+  border-color: var(--fc-error-color, #ef4444);
+  box-shadow: 0 0 0 3px var(--fc-error-shadow, rgba(239, 68, 68, 0.1));
+}
+
+/* Enhanced date input styling */
+.fc-date-container {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.fc-date-input-enhanced {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 1;
+  width: 100%;
+  cursor: pointer;
+}
+
+.fc-date-display {
+  width: 100%;
+  padding: 10px 32px 10px 12px;
+  border: 1px solid var(--fc-border-color, #d1d5db);
+  border-radius: var(--fc-border-radius, 4px);
+  background-color: var(--fc-input-bg, #f9fafb);
+  color: var(--fc-text-color, #1f2937);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fc-date-placeholder {
+  color: var(--fc-placeholder-color, #9ca3af);
+}
+
+.fc-date-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fc-text-light, #6b7280);
+  pointer-events: none;
+}
+
+.fc-date-input-enhanced:focus + .fc-date-icon + .fc-date-display {
+  border-color: var(--fc-primary-color, #2563eb);
+  box-shadow: 0 0 0 3px var(--fc-primary-shadow, rgba(37, 99, 235, 0.1));
+}
+
+.fc-date-input-enhanced.fc-error + .fc-date-icon + .fc-date-display {
+  border-color: var(--fc-error-color, #ef4444);
+  box-shadow: 0 0 0 3px var(--fc-error-shadow, rgba(239, 68, 68, 0.1));
+}
+
+/* Date range styling */
+.fc-date-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fc-date-range-start,
+.fc-date-range-end {
+  flex: 1;
+}
+
+.fc-date-range-separator {
+  color: var(--fc-text-light, #6b7280);
+  font-size: 0.9rem;
+  padding: 0 5px;
+}

@@ -1,0 +1,343 @@
+/**
+ * FormChippy.css v1.0.0
+ * Styling for the FormChippy multi-step form experience
+ * Created for L&C Mortgage Finder
+ * 
+ * @license MIT
+ * @author JP
+ */
+
+/* CSS Variables / Tokens */
+:root {
+    /* MCT tokens for L&C theme */
+    --mct-primary-color: #3f51b5;
+    --mct-primary-hover: #303f9f;
+    --mct-text-color: #333333;
+    --mct-text-secondary: #666666;
+    --mct-border-color: #dddddd;
+    --mct-border-focus: #3f51b5;
+    --mct-background-light: #f9f9f9;
+    --mct-background-dark: #f3f3f3;
+    --mct-error-color: #ff3860;
+    --mct-success-color: #23d160;
+    --mct-inactive-color: #cccccc;
+
+    /* Animation timings */
+    --fc-transition-speed: 0.8s;
+    --fc-transition-easing: ease-out;
+}
+
+/* Main container */
+[data-fc-container] {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Individual slide sections */
+[data-fc-slide] {
+    height: 100vh;
+    width: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always; /* Force stopping at snap points */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+/* Alternating background colors */
+[data-fc-slide]:nth-child(odd) {
+    background-color: var(--mct-background-light);
+}
+
+[data-fc-slide]:nth-child(even) {
+    background-color: var(--mct-background-dark);
+}
+
+/* Slide content wrapper */
+[data-fc-content] {
+    max-width: 600px;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity var(--fc-transition-speed) var(--fc-transition-easing),
+        transform var(--fc-transition-speed) var(--fc-transition-easing);
+}
+
+/* Active slide content animation */
+[data-fc-slide].active [data-fc-content] {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Typography */
+[data-fc-slide-title] {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    color: var(--mct-text-color);
+}
+
+[data-fc-description] {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    color: var(--mct-text-secondary);
+}
+
+/* Individual question within a slide */
+[data-fc-question] {
+    margin-bottom: 2rem;
+}
+
+[data-fc-question] label {
+    display: block;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    color: var(--mct-text-color);
+}
+
+/* Input styles */
+[data-fc-input] {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.25rem;
+    border: 2px solid var(--mct-border-color);
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    transition: border-color 0.3s;
+    background-color: white;
+    color: var(--mct-text-color);
+    box-sizing: border-box;
+}
+
+[data-fc-input]:focus {
+    outline: none;
+    border-color: var(--mct-border-focus);
+    box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.1);
+}
+
+[data-fc-input].error {
+    border-color: var(--mct-error-color);
+}
+
+/* Error message */
+.fc-error-message {
+    color: var(--mct-error-color);
+    font-size: 0.875rem;
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+}
+
+/* Button styles */
+[data-fc-button] {
+    background-color: var(--mct-primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    min-width: 120px;
+    text-align: center;
+}
+
+[data-fc-button]:hover {
+    background-color: var(--mct-primary-hover);
+}
+
+[data-fc-button]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.3);
+}
+
+[data-fc-button]:disabled {
+    background-color: var(--mct-inactive-color);
+    cursor: not-allowed;
+}
+
+/* Progress indicator */
+[data-fc-progress] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 4px;
+    background-color: var(--mct-primary-color);
+    transition: width 0.3s ease-out;
+    z-index: 100;
+}
+
+/* Navigation dots */
+[data-fc-dots] {
+    position: fixed;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 50;
+}
+
+[data-fc-dot] {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--mct-inactive-color);
+    cursor: pointer;
+    transition: transform 0.3s, background-color 0.3s;
+}
+
+[data-fc-dot].active {
+    background-color: var(--mct-primary-color);
+    transform: scale(1.3);
+}
+
+/* Radio button groups */
+.fc-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.fc-radio-group.horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.fc-radio-item {
+    display: flex;
+    align-items: center;
+}
+
+.fc-radio-item input[type='radio'] {
+    margin-right: 0.75rem;
+}
+
+.fc-radio-item label {
+    margin-bottom: 0;
+}
+
+/* Switcheroo (toggle) */
+.fc-toggle {
+    display: flex;
+    background-color: white;
+    border: 2px solid var(--mct-border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.fc-toggle-option {
+    flex: 1;
+    text-align: center;
+    padding: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.fc-toggle-option:not(:last-child) {
+    border-right: 1px solid var(--mct-border-color);
+}
+
+.fc-toggle-option.active {
+    background-color: var(--mct-primary-color);
+    color: white;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    [data-fc-slide] {
+        padding: 1.5rem;
+    }
+
+    [data-fc-slide-title] {
+        font-size: 1.75rem;
+    }
+
+    [data-fc-description] {
+        font-size: 1rem;
+    }
+
+    [data-fc-input],
+    [data-fc-button] {
+        min-height: 44px; /* Minimum touch target size */
+    }
+
+    [data-fc-dots] {
+        right: 15px;
+    }
+
+    .fc-radio-group.horizontal {
+        flex-direction: column;
+    }
+}
+
+/* Accessible focus styles */
+:focus-visible {
+    outline: 3px solid var(--mct-primary-color);
+    outline-offset: 2px;
+}
+
+/* Utility classes */
+.fc-fade-in {
+    animation: fcFadeIn 0.5s forwards;
+}
+
+@keyframes fcFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fc-hidden {
+    display: none !important;
+}
+
+.fc-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Print styles */
+@media print {
+    [data-fc-container] {
+        height: auto;
+        overflow: visible;
+    }
+
+    [data-fc-slide] {
+        height: auto;
+        page-break-after: always;
+    }
+
+    [data-fc-progress],
+    [data-fc-dots],
+    [data-fc-button]:not([data-fc-submit]) {
+        display: none !important;
+    }
+
+    [data-fc-content] {
+        opacity: 1;
+        transform: none;
+    }
+}

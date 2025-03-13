@@ -1,0 +1,107 @@
+/**
+ * Layout styles for FormChippy
+ * Handles the structure and positioning of form elements
+ */
+
+/* Container layout */
+[data-fc-container] {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Content centering */
+[data-fc-content] {
+    padding: var(--fc-spacing-lg);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Question layout */
+[data-fc-question] {
+    position: relative;
+    margin-bottom: var(--fc-spacing-xl);
+    width: 100%;
+}
+
+/* Label positioning */
+[data-fc-question] label {
+    margin-bottom: var(--fc-spacing-sm);
+}
+
+/* Form group layouts */
+.fc-form-group {
+    margin-bottom: var(--fc-spacing-lg);
+}
+
+.fc-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -var(--fc-spacing-md);
+    margin-right: -var(--fc-spacing-md);
+}
+
+.fc-form-col {
+    flex: 1 0 0%;
+    padding-left: var(--fc-spacing-md);
+    padding-right: var(--fc-spacing-md);
+    box-sizing: border-box;
+}
+
+/* Column widths */
+.fc-col-half {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+
+.fc-col-third {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+}
+
+.fc-col-two-thirds {
+    flex: 0 0 66.666667%;
+    max-width: 66.666667%;
+}
+
+.fc-col-quarter {
+    flex: 0 0 25%;
+    max-width: 25%;
+}
+
+/* Button container */
+.fc-button-container {
+    display: flex;
+    margin-top: var(--fc-spacing-lg);
+    gap: var(--fc-spacing-md);
+}
+
+/* Responsive layout adjustments */
+@media (max-width: 768px) {
+    .fc-form-row {
+        display: block;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .fc-form-col,
+    .fc-col-half,
+    .fc-col-third,
+    .fc-col-two-thirds,
+    .fc-col-quarter {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+        margin-bottom: var(--fc-spacing-md);
+    }
+    
+    [data-fc-content] {
+        padding: var(--fc-spacing-md);
+    }
+    
+    .fc-button-container {
+        flex-direction: column;
+    }
+}

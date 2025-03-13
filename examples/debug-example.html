@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormChippy Debug Example</title>
+    <link rel="stylesheet" href="../dist/formchippy.css">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f8fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #0066CC;
+        }
+        .tagline {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        .debug-controls {
+            margin: 2rem 0;
+            padding: 1rem;
+            background-color: #eef2f5;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .debug-controls h2 {
+            margin-top: 0;
+            color: #0066CC;
+        }
+        .control-group {
+            margin-bottom: 1rem;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        button {
+            background-color: #0066CC;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0055AA;
+        }
+        button.secondary {
+            background-color: #6c757d;
+        }
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            height: 500px;
+        }
+        [data-fc-progress] {
+            height: 4px;
+            background-color: #e9ecef;
+        }
+        [data-fc-progress] div {
+            background-color: #0066CC;
+        }
+        [data-fc-dots] {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        [data-fc-content] {
+            padding: 3rem 2rem;
+        }
+        [data-fc-slide-title] {
+            font-size: 1.8rem;
+            color: #0066CC;
+            margin-bottom: 0.75rem;
+        }
+        [data-fc-description] {
+            color: #6c757d;
+            margin-bottom: 2rem;
+        }
+        .input-wrapper {
+            margin-bottom: 1.5rem;
+        }
+        input[data-fc-input], 
+        textarea[data-fc-input], 
+        select[data-fc-input] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        input[type="radio"], 
+        input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+        }
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        .results {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #eef2f5;
+            border-radius: 8px;
+            display: none;
+        }
+        .results pre {
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FormChippy Debug Example</h1>
+            <p class="tagline">A demonstration of the debugging capabilities</p>
+        </header>
+
+        <div class="debug-controls">
+            <h2>Debug Controls</h2>
+            <div class="control-group">
+                <label for="debug-enabled">Debug Options:</label>
+                <label><input type="checkbox" id="debug-enabled" checked> Enable Debug Mode</label>
+                <label><input type="checkbox" id="debug-console" checked> Console Logging</label>
+                <label><input type="checkbox" id="debug-ui" checked> UI Panel</label>
+            </div>
+            <div class="control-group">
+                <label for="debug-level">Log Level:</label>
+                <select id="debug-level">
+                    <option value="debug">Debug (All)</option>
+                    <option value="info">Info</option>
+                    <option value="warn">Warning</option>
+                    <option value="error">Error</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="debug-position">Panel Position:</label>
+                <select id="debug-position">
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="bottom-left">Bottom Left</option>
+                    <option value="top-right">Top Right</option>
+                    <option value="top-left">Top Left</option>
+                </select>
+            </div>
+            <button id="apply-debug-settings">Apply Settings</button>
+            <button id="trigger-debug-event" class="secondary">Trigger Custom Debug Event</button>
+            <button id="map-form-structure" class="secondary">Map Form Structure</button>
+            <button id="log-all-values" class="secondary">Log All Form Values</button>
+        </div>
+
+        <div data-fc-progress></div>
+        
+        <div class="form-container">
+            <div 
+                data-fc-container="debugExample" 
+                data-fc-debuglog="true"
+                data-fc-debuglog-console="true"
+                data-fc-debuglog-ui="true"
+                data-fc-debuglog-level="debug"
+                data-fc-debuglog-position="bottom-right">
+                
+                <!-- Slide 1: Personal Information -->
+                <section data-fc-slide>
+                    <div data-fc-content>
+                        <h2 data-fc-slide-title>Personal Information</h2>
+                        <p data-fc-description>Let's start with some basic information.</p>
+                        
+                        <div class="input-wrapper">
+                            <label for="name">Full Name:</label>
+                            <input type="text" id="name" name="name" data-fc-input required>
+                        </div>
+                        
+                        <div class="input-wrapper">
+                            <label for="email">Email Address:</label>
+                            <input type="email" id="email" name="email" data-fc-input required>
+                        </div>
+                        
+                        <div class="action-row">
+                            <div></div>
+                            <button data-fc-button>Continue</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Slide 2: File Upload -->
+                <section data-fc-slide>
+                    <div data-fc-content>
+                        <h2 data-fc-slide-title>Document Upload</h2>
+                        <p data-fc-description>Please upload a profile picture.</p>
+                        
+                        <div class="input-wrapper">
+                            <label for="profile-picture">Profile Picture:</label>
+                            <input 
+                                type="file" 
+                                id="profile-picture" 
+                                name="profilePicture" 
+                                data-fc-input 
+                                accept="image/*"
+                                data-fc-file-max-size="5" 
+                                data-fc-file-preview="true">
+                        </div>
+                        
+                        <div class="action-row">
+                            <button data-fc-button-prev>Back</button>
+                            <button data-fc-button>Continue</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Slide 3: Text Area -->
+                <section data-fc-slide>
+                    <div data-fc-content>
+                        <h2 data-fc-slide-title>Additional Information</h2>
+                        <p data-fc-description>Tell us a bit more about yourself.</p>
+                        
+                        <div class="input-wrapper">
+                            <label for="bio">Short Bio:</label>
+                            <textarea 
+                                id="bio" 
+                                name="bio" 
+                                data-fc-input 
+                                data-fc-textarea-autoresize="true"
+                                data-fc-textarea-counter="true"
+                                data-fc-textarea-maxlength="200"
+                                rows="4"></textarea>
+                        </div>
+                        
+                        <div class="action-row">
+                            <button data-fc-button-prev>Back</button>
+                            <button data-fc-button>Continue</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Slide 4: Date Input -->
+                <section data-fc-slide>
+                    <div data-fc-content>
+                        <h2 data-fc-slide-title>Important Dates</h2>
+                        <p data-fc-description>Please provide the following dates.</p>
+                        
+                        <div class="input-wrapper">
+                            <label for="birth-date">Date of Birth:</label>
+                            <input 
+                                type="date" 
+                                id="birth-date" 
+                                name="birthDate" 
+                                data-fc-input 
+                                data-fc-date-min="1900-01-01"
+                                data-fc-date-max="2022-12-31"
+                                required>
+                        </div>
+                        
+                        <div class="action-row">
+                            <button data-fc-button-prev>Back</button>
+                            <button data-fc-button>Continue</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Slide 5: Options (Radio) -->
+                <section data-fc-slide>
+                    <div data-fc-content>
+                        <h2 data-fc-slide-title>Your Preferences</h2>
+                        <p data-fc-description>Select your preferred contact method.</p>
+                        
+                        <div class="input-wrapper">
+                            <label>Contact Preference:</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="contactPreference" value="email" data-fc-input required>
+                                    Email
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="contactPreference" value="phone" data-fc-input>
+                                    Phone
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="contactPreference" value="mail" data-fc-input>
+                                    Mail
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="action-row">
+                            <button data-fc-button-prev>Back</button>
+                            <button data-fc-button>Continue</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Slide 6: Submit -->
+                <section data-fc-slide>
+                    <div data-fc-content>
+                        <h2 data-fc-slide-title>Review & Submit</h2>
+                        <p data-fc-description>Please review your information and submit.</p>
+                        
+                        <p>All of your information has been collected and is ready to submit. Click the button below to complete the process.</p>
+                        
+                        <div class="action-row">
+                            <button data-fc-button-prev>Back</button>
+                            <button data-fc-submit>Submit Form</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        
+        <div data-fc-dots></div>
+        
+        <div class="results" id="form-results">
+            <h2>Form Submission Results</h2>
+            <pre id="results-data"></pre>
+        </div>
+    </div>
+
+    <script src="../dist/formchippy.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize FormChippy instance
+            const formChippy = new FormChippy({
+                container: 'debugExample',
+                activeClass: 'fc-slideactive',
+                submitCallback: function(formData) {
+                    // Display the collected data
+                    const resultsContainer = document.getElementById('form-results');
+                    resultsContainer.style.display = 'block';
+                    
+                    const resultsContent = document.createElement('pre');
+                    resultsContent.textContent = JSON.stringify(formData, null, 2);
+                    resultsContainer.innerHTML = '<h3>Form Submission Data</h3>';
+                    resultsContainer.appendChild(resultsContent);
+                    
+                    // Log the submission
+                    console.log('Form submitted with data:', formData);
+                }
+            });
+            
+            // Set up debug control buttons
+            const debugEnabledCheckbox = document.getElementById('debug-enabled');
+            const debugConsoleCheckbox = document.getElementById('debug-console');
+            const debugUICheckbox = document.getElementById('debug-ui');
+            const debugLevelSelect = document.getElementById('debug-level');
+            const debugPositionSelect = document.getElementById('debug-position');
+            const applySettingsButton = document.getElementById('apply-debug-settings');
+            const triggerEventButton = document.getElementById('trigger-debug-event');
+            const mapFormButton = document.getElementById('map-form-structure');
+            const logValuesButton = document.getElementById('log-all-values');
+            // Wait for FormChippy to initialize
+            setTimeout(() => {
+                const form = window.formChippy.getInstance('debugExample');
+                
+                // Apply debug settings button
+                document.getElementById('apply-debug-settings').addEventListener('click', function() {
+                    const debugEnabled = document.getElementById('debug-enabled').checked;
+                    const consoleEnabled = document.getElementById('debug-console').checked;
+                    const uiEnabled = document.getElementById('debug-ui').checked;
+                    const logLevel = document.getElementById('debug-level').value;
+                    const position = document.getElementById('debug-position').value;
+                    
+                    // Update debug settings
+                    if (form.debug) {
+                        form.debug.setEnabled(debugEnabled);
+                        form.debug.enableConsole(consoleEnabled);
+                        form.debug.enableUI(uiEnabled);
+                        form.debug.setLogLevel(logLevel);
+                        form.debug.setPosition(position);
+                        
+                        // Log the change
+                        form.debug.info('Debug settings updated', {
+                            enabled: debugEnabled,
+                            console: consoleEnabled,
+                            ui: uiEnabled,
+                            logLevel: logLevel,
+                            position: position
+                        });
+                    }
+                });
+                
+                // Custom debug event button
+                document.getElementById('trigger-debug-event').addEventListener('click', function() {
+                    if (form.debug && form.debug.enabled) {
+                        // Log different levels to demonstrate
+                        form.debug.log('Custom debug event triggered', { timestamp: new Date().toISOString() });
+                        form.debug.info('This is an info message');
+                        form.debug.warn('This is a warning message');
+                        form.debug.error('This is an error message', { 
+                            error: 'This is just a demonstration',
+                            code: 'DEMO_ERROR',
+                            fix: 'No action needed'
+                        });
+                    } else {
+                        console.log('Debug is not enabled');
+                    }
+                });
+                
+                // Handle form submission
+                document.addEventListener('formchippy:submit', function(event) {
+                    const { formName, formData } = event.detail;
+                    
+                    if (formName === 'debugExample') {
+                        // Display the form data
+                        const resultsContainer = document.getElementById('form-results');
+                        const resultsData = document.getElementById('results-data');
+                        
+                        resultsContainer.style.display = 'block';
+                        resultsData.textContent = JSON.stringify(formData, null, 2);
+                        
+                        // Log to debug
+                        if (form.debug && form.debug.enabled) {
+                            form.debug.info('Form submitted successfully', { formData });
+                        }
+                    }
+                });
+                
+                // Map form structure button event handler
+                document.getElementById('map-form-structure').addEventListener('click', function() {
+                    if (form.debug && form.debug.enabled) {
+                        form.debug.mapSlidesAndInputs();
+                        form.debug.info('Form structure mapped', {
+                            slideCount: form.totalSlides,
+                            timestamp: new Date().toISOString()
+                        });
+                    } else {
+                        console.log('Debug is not enabled');
+                    }
+                });
+                
+                // Log all form values button event handler
+                document.getElementById('log-all-values').addEventListener('click', function() {
+                    if (form.debug && form.debug.enabled) {
+                        const values = form.debug.getAllFormValues();
+                        form.debug.info('Current form values logged', {
+                            timestamp: new Date().toISOString()
+                        });
+                    } else {
+                        console.log('Debug is not enabled');
+                    }
+                });
+                
+                // Create a custom validation error to demonstrate debug logs
+                const emailInput = document.getElementById('email');
+                emailInput.addEventListener('blur', function() {
+                    if (emailInput.value && !emailInput.value.includes('@')) {
+                        if (form.debug && form.debug.enabled) {
+                            form.debug.warn('Email validation failed', {
+                                element: 'email',
+                                value: emailInput.value,
+                                issue: 'Email must contain @ symbol'
+                            });
+                        }
+                    }
+                });
+            }, 500); // Small delay to ensure FormChippy is initialized
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+/**
+ * Button styles for FormChippy
+ * Styles for navigation buttons and other interactive elements
+ */
+
+/* Base button styles */
+.fc-button,
+[data-fc-button] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    border-radius: var(--fc-border-radius-md);
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, 
+                border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Button variants */
+.fc-button-primary,
+[data-fc-button="primary"] {
+    color: #fff;
+    background-color: var(--fc-primary-color);
+    border-color: var(--fc-primary-color);
+}
+
+.fc-button-primary:hover,
+[data-fc-button="primary"]:hover {
+    background-color: var(--fc-primary-hover);
+    border-color: var(--fc-primary-hover);
+}
+
+.fc-button-secondary,
+[data-fc-button="secondary"] {
+    color: var(--fc-text-color);
+    background-color: transparent;
+    border-color: var(--fc-border-color);
+}
+
+.fc-button-secondary:hover,
+[data-fc-button="secondary"]:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: var(--fc-border-color);
+}
+
+/* Disabled state */
+.fc-button:disabled,
+.fc-button.disabled,
+[data-fc-button]:disabled,
+[data-fc-button].disabled,
+.fc-button-disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+}
+
+/* Validation state buttons */
+.fc-button-invalid,
+[data-fc-button].invalid {
+    position: relative;
+    overflow: hidden;
+}
+
+.fc-button-invalid::before,
+[data-fc-button].invalid::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    box-sizing: border-box;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Loading state */
+.fc-button-loading,
+[data-fc-button].loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.fc-button-loading::after,
+[data-fc-button].loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: fc-spin 0.75s linear infinite;
+}
+
+.fc-button-text,
+[data-fc-button="text"] {
+    color: var(--fc-primary-color);
+    background-color: transparent;
+    border-color: transparent;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.fc-button-text:hover,
+[data-fc-button="text"]:hover {
+    text-decoration: underline;
+    background-color: rgba(var(--fc-primary-color-rgb, 63, 81, 181), 0.05);
+}
+
+/* Button sizes */
+.fc-button-sm,
+[data-fc-button-size="sm"] {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.fc-button-lg,
+[data-fc-button-size="lg"] {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+}
+
+/* Icon buttons */
+.fc-button-icon,
+[data-fc-button="icon"] {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fc-button-icon.fc-button-sm,
+[data-fc-button="icon"][data-fc-button-size="sm"] {
+    width: 2rem;
+    height: 2rem;
+}
+
+.fc-button-icon.fc-button-lg,
+[data-fc-button="icon"][data-fc-button-size="lg"] {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Navigation buttons */
+.fc-nav-button,
+[data-fc-nav-button] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background-color: var(--fc-primary-color);
+    color: white;
+    border: none;
+    box-shadow: var(--fc-shadow-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fc-nav-button:hover,
+[data-fc-nav-button]:hover {
+    background-color: var(--fc-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--fc-shadow-lg);
+}
+
+.fc-nav-button:active,
+[data-fc-nav-button]:active {
+    transform: translateY(0);
+    box-shadow: var(--fc-shadow-sm);
+}
+
+/* Navigation button icons */
+.fc-nav-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    stroke-width: 2;
+    stroke: currentColor;
+    fill: none;
+}
+
+/* Fixed position nav buttons */
+.fc-nav-fixed {
+    position: fixed;
+    bottom: 2rem;
+    z-index: 100;
+}
+
+.fc-nav-prev {
+    left: 2rem;
+}
+
+.fc-nav-next {
+    right: 2rem;
+}
+
+/* Disabled state */
+.fc-button:disabled,
+.fc-button.disabled,
+[data-fc-button]:disabled,
+[data-fc-button].disabled,
+.fc-nav-button:disabled,
+.fc-nav-button.disabled,
+[data-fc-nav-button]:disabled,
+[data-fc-nav-button].disabled {
+    opacity: 0.65;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Focus states for accessibility */
+.fc-button:focus,
+[data-fc-button]:focus,
+.fc-nav-button:focus,
+[data-fc-nav-button]:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(var(--fc-primary-color-rgb, 63, 81, 181), 0.25);
+}
+
+/* Submit button */
+.fc-submit-button,
+[data-fc-submit] {
+    background-color: var(--fc-success-color);
+    border-color: var(--fc-success-color);
+    color: white;
+}
+
+.fc-submit-button:hover,
+[data-fc-submit]:hover {
+    background-color: color-mix(in srgb, var(--fc-success-color) 80%, black);
+    border-color: color-mix(in srgb, var(--fc-success-color) 80%, black);
+}
+
+/* Button with icon and text */
+.fc-button-with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.fc-button-icon-left {
+    margin-right: 0.5rem;
+}
+
+.fc-button-icon-right {
+    margin-left: 0.5rem;
+}
+
+/* Button loading state */
+.fc-button-loading,
+[data-fc-button-loading] {
+    position: relative;
+    color: transparent !important;
+}
+
+.fc-button-loading::after,
+[data-fc-button-loading]::after {
+    content: "";
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-top-color: white;
+    animation: fc-spinner 0.6s linear infinite;
+}
+
+@keyframes fc-spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .fc-nav-fixed {
+        bottom: 1.5rem;
+    }
+    
+    .fc-nav-prev {
+        left: 1rem;
+    }
+    
+    .fc-nav-next {
+        right: 1rem;
+    }
+    
+    .fc-button,
+    [data-fc-button] {
+        padding: 0.625rem 1.25rem;
+    }
+}

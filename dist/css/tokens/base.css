@@ -1,0 +1,53 @@
+/**
+ * Base CSS tokens for FormChippy
+ * These are the default variables used throughout the library
+ */
+
+:root {
+    /* FormChippy base tokens */
+    --fc-primary-color: #3f51b5;
+    --fc-primary-hover: #303f9f;
+    --fc-text-color: #333333;
+    --fc-text-secondary: #666666;
+    --fc-border-color: #dddddd;
+    --fc-border-focus: #3f51b5;
+    --fc-background-light: #f9f9f9;
+    --fc-background-dark: #f3f3f3;
+    --fc-error-color: #ff3860;
+    --fc-success-color: #23d160;
+    --fc-inactive-color: #cccccc;
+    
+    /* Animation timing variables */
+    --fc-transition-speed: 0.8s;
+    --fc-transition-easing: ease-out;
+    
+    /* Spacing variables */
+    --fc-spacing-xs: 0.25rem;
+    --fc-spacing-sm: 0.5rem;
+    --fc-spacing-md: 1rem;
+    --fc-spacing-lg: 2rem;
+    --fc-spacing-xl: 3rem;
+    
+    /* Border radius */
+    --fc-border-radius-sm: 4px;
+    --fc-border-radius-md: 6px;
+    --fc-border-radius-lg: 12px;
+    
+    /* Shadows */
+    --fc-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --fc-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --fc-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    
+    /* Map MCT tokens to FormChippy tokens by default (for backward compatibility) */
+    --mct-primary-color: var(--fc-primary-color);
+    --mct-primary-hover: var(--fc-primary-hover);
+    --mct-text-color: var(--fc-text-color);
+    --mct-text-secondary: var(--fc-text-secondary);
+    --mct-border-color: var(--fc-border-color);
+    --mct-border-focus: var(--fc-border-focus);
+    --mct-background-light: var(--fc-background-light);
+    --mct-background-dark: var(--fc-background-dark);
+    --mct-error-color: var(--fc-error-color);
+    --mct-success-color: var(--fc-success-color);
+    --mct-inactive-color: var(--fc-inactive-color);
+}

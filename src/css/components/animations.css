@@ -1,0 +1,371 @@
+/**
+ * Animation styles for FormChippy
+ * Defines animations and transitions used throughout the library
+ */
+
+/* Slide transition animations */
+@keyframes fc-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fc-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes fc-slide-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fc-slide-out-up {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+}
+
+@keyframes fc-slide-in-down {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fc-slide-out-down {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+}
+
+/* Scale animations */
+@keyframes fc-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fc-scale-out {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+/* Slide active state animations */
+.fc-slide-transition-enter-fc-slideactive,
+[data-fc-slide].entering {
+    animation: fc-slide-in-up var(--fc-transition-speed) var(--fc-transition-easing) forwards;
+}
+
+.fc-slide-transition-leave-fc-slideactive,
+[data-fc-slide].leaving {
+    animation: fc-slide-out-up var(--fc-transition-speed) var(--fc-transition-easing) forwards;
+}
+
+/* Previous slide animation (when going backwards) */
+.fc-slide-transition-prev-enter-fc-slideactive,
+[data-fc-slide].entering-prev {
+    animation: fc-slide-in-down var(--fc-transition-speed) var(--fc-transition-easing) forwards;
+}
+
+.fc-slide-transition-prev-leave-fc-slideactive,
+[data-fc-slide].leaving-prev {
+    animation: fc-slide-out-down var(--fc-transition-speed) var(--fc-transition-easing) forwards;
+}
+
+/* Utility animation classes */
+.fc-animate-fade {
+    animation: fc-fade-in 0.3s ease forwards;
+}
+
+.fc-animate-scale {
+    animation: fc-scale-in 0.3s ease forwards;
+}
+
+/* Error message animations */
+@keyframes fc-pulse-error {
+    0% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 0.8; transform: scale(1); }
+}
+
+.fc-pulse-error {
+    animation: fc-pulse-error 0.8s ease;
+}
+
+/* Loading animations */
+@keyframes fc-spin {
+    to { transform: rotate(360deg); }
+}
+
+.fc-loading,
+[data-fc-loading] {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid rgba(var(--fc-primary-color-rgb, 63, 81, 181), 0.3);
+    border-radius: 50%;
+    border-top-color: var(--fc-primary-color);
+    animation: fc-spin 0.8s linear infinite;
+}
+
+.fc-loading.fc-loading-lg,
+[data-fc-loading-size="lg"] {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 3px;
+}
+
+.fc-loading.fc-loading-sm,
+[data-fc-loading-size="sm"] {
+    width: 1rem;
+    height: 1rem;
+    border-width: 2px;
+}
+
+/* Progress bar loading animation */
+@keyframes fc-progress-indeterminate {
+    0% {
+        left: -35%;
+        right: 100%;
+    }
+    60% {
+        left: 100%;
+        right: -35%;
+    }
+    100% {
+        left: 100%;
+        right: -35%;
+    }
+}
+
+.fc-progress-indeterminate,
+[data-fc-progress-indeterminate] {
+    position: relative;
+    overflow: hidden;
+}
+
+.fc-progress-indeterminate::after,
+[data-fc-progress-indeterminate]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background-color: var(--fc-primary-color);
+    animation: fc-progress-indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+}
+
+/* Success animation */
+@keyframes fc-success-circle {
+    0% {
+        transform: scale(0.1);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes fc-success-check {
+    0% {
+        stroke-dashoffset: 30;
+        opacity: 0;
+    }
+    60% {
+        stroke-dashoffset: 30;
+        opacity: 0;
+    }
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+}
+
+.fc-success-animation,
+[data-fc-success-animation] {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.fc-success-circle,
+[data-fc-success-circle] {
+    width: 100%;
+    height: 100%;
+    fill: var(--fc-success-color);
+    border-radius: 50%;
+    transform-origin: center;
+    animation: fc-success-circle 0.5s ease-in-out forwards;
+}
+
+.fc-success-check,
+[data-fc-success-check] {
+    fill: none;
+    stroke: white;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    animation: fc-success-check 0.5s ease-in-out 0.3s forwards;
+}
+
+/* Error animation */
+@keyframes fc-error-circle {
+    0% {
+        transform: scale(0.1);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes fc-error-cross {
+    0% {
+        stroke-dashoffset: 30;
+        opacity: 0;
+    }
+    60% {
+        stroke-dashoffset: 30;
+        opacity: 0;
+    }
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+}
+
+.fc-error-animation,
+[data-fc-error-animation] {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.fc-error-circle,
+[data-fc-error-circle] {
+    width: 100%;
+    height: 100%;
+    fill: var(--fc-error-color);
+    border-radius: 50%;
+    transform-origin: center;
+    animation: fc-error-circle 0.5s ease-in-out forwards;
+}
+
+.fc-error-cross,
+[data-fc-error-cross] {
+    fill: none;
+    stroke: white;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    animation: fc-error-cross 0.5s ease-in-out 0.3s forwards;
+}
+
+/* Pulse animation for attention */
+@keyframes fc-pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.fc-pulse,
+[data-fc-pulse] {
+    animation: fc-pulse 1.5s ease-in-out infinite;
+}
+
+/* Shake animation for errors */
+@keyframes fc-shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+.fc-shake,
+[data-fc-shake] {
+    animation: fc-shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Custom scrollbar styling */
+.fc-custom-scrollbar,
+[data-fc-custom-scrollbar] {
+    scrollbar-width: thin;
+    scrollbar-color: var(--fc-border-color) transparent;
+}
+
+.fc-custom-scrollbar::-webkit-scrollbar,
+[data-fc-custom-scrollbar]::-webkit-scrollbar {
+    width: 6px;
+}
+
+.fc-custom-scrollbar::-webkit-scrollbar-track,
+[data-fc-custom-scrollbar]::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fc-custom-scrollbar::-webkit-scrollbar-thumb,
+[data-fc-custom-scrollbar]::-webkit-scrollbar-thumb {
+    background-color: var(--fc-border-color);
+    border-radius: 6px;
+}
+
+.fc-custom-scrollbar::-webkit-scrollbar-thumb:hover,
+[data-fc-custom-scrollbar]::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--fc-border-color) 70%, black);
+}

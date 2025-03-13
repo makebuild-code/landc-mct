@@ -1,0 +1,21 @@
+/**
+ * Money Supermarket theme CSS tokens for FormChippy
+ * These variables override the base tokens when the MSM theme is active
+ */
+
+[data-theme="msm"] {
+    /* Money Supermarket brand colors */
+    --fc-primary-color: #ff9900; /* MSM orange */
+    --fc-primary-hover: #e68a00;
+    --fc-text-color: #333333;
+    --fc-text-secondary: #555555;
+    --fc-border-color: #dddddd;
+    --fc-border-focus: #ff9900;
+    --fc-background-light: #f8f8f8;
+    --fc-background-dark: #f0f0f0;
+    --fc-error-color: #ff3860;
+    --fc-success-color: #00c853;
+    --fc-inactive-color: #cccccc;
+    
+    /* These mappings happen automatically through the base.css inheritance */
+}

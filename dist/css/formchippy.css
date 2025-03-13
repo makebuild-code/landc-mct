@@ -1,0 +1,183 @@
+/**
+ * FormChippy.css v1.0.0
+ * Styling for the FormChippy multi-step form experience
+ * Created for L&C Mortgage Finder
+ * 
+ * @license MIT
+ * @author JP
+ */
+
+/* Import token files */
+@import url('./tokens/base.css');
+@import url('./tokens/lc.css');
+@import url('./tokens/msm.css');
+
+/* Import component styles */
+@import url('./components/layout.css');
+@import url('./components/inputs.css');
+@import url('./components/buttons.css');
+@import url('./components/progress.css');
+@import url('./components/animations.css');
+@import url('./components/debug.css');
+
+/* Import input type styles */
+@import url('./file.css');
+@import url('./textarea.css');
+@import url('./date.css');
+
+/* Import debug styles */
+@import url('./debug.css');
+
+/* Main container */
+[data-fc-container] {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Individual slide sections */
+[data-fc-slide] {
+    height: 100vh;
+    width: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always; /* Force stopping at snap points */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+/* Alternating background colors */
+[data-fc-slide]:nth-child(odd) {
+    background-color: var(--mct-background-light);
+}
+
+[data-fc-slide]:nth-child(even) {
+    background-color: var(--mct-background-dark);
+}
+
+/* Slide content wrapper */
+[data-fc-content] {
+    max-width: 600px;
+    width: 100%;
+    opacity: 0.5;
+    transform: translateY(30px);
+    transition: opacity var(--fc-transition-speed) var(--fc-transition-easing),
+        transform var(--fc-transition-speed) var(--fc-transition-easing);
+    pointer-events: none; /* Prevent interaction with inactive slides */
+}
+
+/* Prevent inactive slides from being focused or their contents */
+[data-fc-slide]:not(.fc-slideactive) {
+    pointer-events: none;
+}
+
+/* Prevent inactive slide elements from being tabbed to */
+[data-fc-slide]:not(.fc-slideactive) * {
+    visibility: visible; /* Keep visible but... */
+    pointer-events: none;
+    -webkit-user-select: none;
+    user-select: none;
+    /* tabindex is set via JS since it cannot be set in CSS */
+}
+
+/* Active slide content animation */
+[data-fc-slide].fc-slideactive [data-fc-content] {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto; /* Allow interaction with active slides */
+}
+
+/* Typography */
+[data-fc-slide-title] {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    color: var(--mct-text-color);
+}
+
+[data-fc-description] {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    color: var(--mct-text-secondary);
+}
+
+/* Individual question within a slide */
+[data-fc-question] {
+    margin-bottom: 2rem;
+}
+
+[data-fc-question] label {
+    display: block;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    color: var(--mct-text-color);
+}
+
+/* Error message */
+.fc-error-message {
+    color: var(--mct-error-color);
+    font-size: 0.875rem;
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+    [data-fc-content] {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+    
+    [data-fc-slide-title] {
+        font-size: 2rem;
+    }
+    
+    [data-fc-description] {
+        font-size: 1.125rem;
+    }
+    
+    /* Hide dots on mobile */
+    [data-fc-dots] {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    [data-fc-slide] {
+        padding: 1.5rem;
+    }
+    
+    [data-fc-slide-title] {
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    [data-fc-description] {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Accessibility */
+.visually-hidden {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+/* Focus styles for better accessibility */
+:focus-visible {
+    outline: 3px solid var(--mct-primary-color);
+    outline-offset: 2px;
+}

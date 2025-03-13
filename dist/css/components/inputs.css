@@ -1,0 +1,366 @@
+/**
+ * Input styles for FormChippy
+ * Styling for various input types including text, radio, checkbox, etc.
+ */
+
+/* Base input styles */
+[data-fc-input],
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="url"],
+textarea,
+select {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--fc-text-color);
+    background-color: #ffffff;
+    background-clip: padding-box;
+    border: 1px solid var(--fc-border-color);
+    border-radius: var(--fc-border-radius-md);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    box-sizing: border-box;
+}
+
+/* Focus states */
+[data-fc-input]:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 0;
+    border-color: var(--fc-primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--fc-primary-color-rgb, 63, 81, 181), 0.2);
+}
+
+/* Input with error */
+[data-fc-input].error,
+input.error,
+textarea.error,
+select.error {
+    border-color: var(--fc-error-color);
+}
+
+[data-fc-input].error:focus,
+input.error:focus,
+textarea.error:focus,
+select.error:focus {
+    box-shadow: 0 0 0 3px rgba(var(--fc-error-color-rgb, 255, 56, 96), 0.2);
+}
+
+/* Placeholder styling */
+::placeholder {
+    color: var(--fc-inactive-color);
+    opacity: 1;
+}
+
+/* Radio styling */
+input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
+.fc-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--fc-spacing-md);
+}
+
+.fc-radio-group[data-fc-layout="horizontal"] {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+/* Radio option styles */
+.fc-radio-card {
+    display: flex;
+    align-items: center;
+    padding: var(--fc-spacing-md);
+    border: 1px solid var(--fc-border-color);
+    border-radius: var(--fc-border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.fc-radio-card:hover {
+    border-color: var(--fc-primary-color);
+}
+
+input[type="radio"]:checked + .fc-custom-radio-card,
+input[type="radio"]:checked ~ .fc-custom-radio-card {
+    border-color: var(--fc-primary-color);
+    background-color: rgba(var(--fc-primary-color-rgb, 63, 81, 181), 0.05);
+}
+
+.fc-custom-radio-card::before {
+    content: '';
+    position: absolute;
+    right: var(--fc-spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--fc-border-color);
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.fc-custom-radio-card::after {
+    content: '';
+    position: absolute;
+    right: var(--fc-spacing-md);
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    width: 10px;
+    height: 10px;
+    background-color: var(--fc-primary-color);
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+input[type="radio"]:checked + .fc-custom-radio-card::before,
+input[type="radio"]:checked ~ .fc-custom-radio-card::before {
+    border-color: var(--fc-primary-color);
+}
+
+input[type="radio"]:checked + .fc-custom-radio-card::after,
+input[type="radio"]:checked ~ .fc-custom-radio-card::after {
+    transform: translateY(-50%) scale(1);
+}
+
+/* Radio buttons style */
+.fc-radio-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--fc-spacing-sm);
+}
+
+.fc-radio-button {
+    background-color: #ffffff;
+    border: 1px solid var(--fc-border-color);
+    border-radius: var(--fc-border-radius-md);
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fc-radio-button:hover {
+    border-color: var(--fc-primary-color);
+}
+
+.fc-radio-button.selected {
+    background-color: var(--fc-primary-color);
+    color: white;
+    border-color: var(--fc-primary-color);
+}
+
+/* Toggle style for radio */
+.fc-toggle {
+    display: flex;
+    position: relative;
+    background-color: #f0f0f0;
+    border-radius: 9999px;
+    padding: 4px;
+    width: fit-content;
+}
+
+.fc-toggle-label {
+    position: relative;
+    z-index: 1;
+    padding: 0.5rem 1.25rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.fc-toggle-label.selected {
+    color: white;
+}
+
+.fc-toggle-handle {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    bottom: 4px;
+    width: calc(50% - 4px);
+    background-color: var(--fc-primary-color);
+    border-radius: 9999px;
+    transition: transform 0.3s ease;
+}
+
+/* Checkbox/Toggle switch */
+.fc-toggle-switch {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    gap: var(--fc-spacing-md);
+}
+
+.fc-toggle-switch input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.fc-toggle-track {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    background-color: var(--fc-inactive-color);
+    border-radius: 9999px;
+    transition: all 0.2s ease;
+}
+
+.fc-toggle-handle {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.fc-toggle-switch.fc-checked .fc-toggle-track {
+    background-color: var(--fc-primary-color);
+}
+
+.fc-toggle-switch.fc-checked .fc-toggle-handle {
+    transform: translateX(24px);
+}
+
+.fc-toggle-label-text {
+    font-size: 1rem;
+}
+
+.fc-toggle-text {
+    position: absolute;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 8px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.fc-toggle-on {
+    opacity: 0;
+}
+
+.fc-toggle-off {
+    opacity: 1;
+}
+
+.fc-toggle-switch.fc-checked .fc-toggle-on {
+    opacity: 1;
+}
+
+.fc-toggle-switch.fc-checked .fc-toggle-off {
+    opacity: 0;
+}
+
+/* Option cards */
+.fc-option-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--fc-spacing-md);
+}
+
+.fc-option-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--fc-border-color);
+    border-radius: var(--fc-border-radius-md);
+    padding: var(--fc-spacing-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fc-option-card:hover {
+    border-color: var(--fc-primary-color);
+}
+
+.fc-option-card.fc-selected {
+    border-color: var(--fc-primary-color);
+    background-color: rgba(var(--fc-primary-color-rgb, 63, 81, 181), 0.05);
+}
+
+.fc-option-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.fc-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--fc-spacing-sm);
+}
+
+.fc-card-icon {
+    font-size: 2rem;
+    color: var(--fc-primary-color);
+}
+
+.fc-card-label {
+    font-weight: 500;
+}
+
+.fc-card-marker {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--fc-border-color);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.fc-option-card.fc-selected .fc-card-marker {
+    border-color: var(--fc-primary-color);
+    background-color: var(--fc-primary-color);
+}
+
+.fc-option-card.fc-selected .fc-card-marker::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .fc-option-cards {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    .fc-radio-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .fc-radio-button {
+        width: 100%;
+    }
+}

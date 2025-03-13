@@ -1,0 +1,54 @@
+/**
+ * FormChippy - Textarea styling
+ */
+
+textarea[data-fc-textarea] {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid var(--fc-border-color, #d1d5db);
+  border-radius: var(--fc-border-radius, 4px);
+  background-color: var(--fc-input-bg, #f9fafb);
+  color: var(--fc-text-color, #1f2937);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+textarea[data-fc-textarea]:focus {
+  outline: none;
+  border-color: var(--fc-primary-color, #2563eb);
+  box-shadow: 0 0 0 3px var(--fc-primary-shadow, rgba(37, 99, 235, 0.1));
+}
+
+textarea[data-fc-textarea].fc-error {
+  border-color: var(--fc-error-color, #ef4444);
+  box-shadow: 0 0 0 3px var(--fc-error-shadow, rgba(239, 68, 68, 0.1));
+}
+
+textarea[data-fc-textarea][data-fc-auto-resize] {
+  overflow-y: hidden;
+}
+
+/* Character counter */
+.fc-char-counter {
+  display: block;
+  text-align: right;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--fc-text-light, #6b7280);
+  transition: color 0.2s;
+}
+
+.fc-char-counter-warning {
+  color: var(--fc-warning-color, #f59e0b);
+}
+
+/* Height measurement div (used for auto-resize) */
+.fc-textarea-height-measure {
+  width: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

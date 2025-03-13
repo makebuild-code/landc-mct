@@ -1,0 +1,24 @@
+{
+  "name": "formchippy",
+  "version": "1.0.0",
+  "description": "A modern multi-step form library with validation and navigation",
+  "main": "dist/formchippy.js",
+  "scripts": {
+    "dev": "http-server -p 3000 -c-1",
+    "build": "mkdir -p dist/css && cp -r src/js/* dist/ && cp -r src/css dist/",
+    "watch": "nodemon --watch src -e js,css,html --exec 'npm run build'",
+    "start": "npm run build && npm run dev"
+  },
+  "keywords": [
+    "form",
+    "multi-step",
+    "validation",
+    "navigation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "nodemon": "^2.0.22"
+  }
+}
