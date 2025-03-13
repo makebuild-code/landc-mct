@@ -1,5 +1,5 @@
 /**
- * FormChippy.js v1.0.0
+ * FormChippy.js v1.1.0
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
  *
