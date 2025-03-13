@@ -12,30 +12,55 @@ export class Progress {
 
     /**
      * Create navigation dots
+     * If a template dot exists in the dots container, it will be used as a template for generating all dots
      */
     createNavigationDots() {
         if (!this.formChippy.dotsContainer) return;
-
+        
+        // Check for template dot
+        const templateDot = this.formChippy.dotsContainer.querySelector('[data-fc-dot]');
+        const hasTemplate = templateDot !== null;
+        
+        // Store template before clearing if it exists
+        const dotTemplate = hasTemplate ? templateDot.cloneNode(true) : null;
+        
         // Clear existing dots
         this.formChippy.dotsContainer.innerHTML = '';
-
+        
+        this.formChippy.debug.info(`Creating navigation dots${hasTemplate ? ' using template' : ''}`);
+        
         // Create dots for each slide
         this.formChippy.slides.forEach((slide, index) => {
-            const dot = document.createElement('div');
-            dot.setAttribute('data-fc-dot', '');
+            let dot;
+            
+            if (hasTemplate) {
+                // Use the template if available
+                dot = dotTemplate.cloneNode(true);
+                
+                // Clear any existing click events by cloning without events
+                const newDot = dot.cloneNode(true);
+                dot.parentNode?.replaceChild(newDot, dot);
+                dot = newDot;
+            } else {
+                // Create a new dot from scratch
+                dot = document.createElement('div');
+                dot.setAttribute('data-fc-dot', '');
+            }
+            
+            // Set common attributes regardless of template usage
             dot.setAttribute('data-index', index);
             dot.setAttribute('data-slide', slide.getAttribute('data-fc-slide') || `slide-${index + 1}`);
             dot.setAttribute('role', 'button');
             dot.setAttribute('tabindex', '0');
             dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
-
+            
             // Add click event
             dot.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 this.formChippy.goToSlide(index);
             });
-
+            
             // Add keyboard event for accessibility
             dot.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -43,7 +68,7 @@ export class Progress {
                     this.formChippy.goToSlide(index);
                 }
             });
-
+            
             // Add to container
             this.formChippy.dotsContainer.appendChild(dot);
         });

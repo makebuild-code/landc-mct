@@ -26,6 +26,7 @@ class FormChippy {
         // Default options
         this.options = {
             containerSelector: '[data-fc-container]',
+            slideListSelector: '[data-fc-slide-list]',
             slideSelector: '[data-fc-slide]',
             contentSelector: '[data-fc-content]',
             inputSelector: '[data-fc-input]',
@@ -38,6 +39,8 @@ class FormChippy {
             animationDelay: 800,
             useIntersectionObserver: false, // Disable auto-navigation by scrolling by default
             validateByDefault: true, // Whether to validate by default (can be overridden by data-fc-validate attribute)
+            autoInitialize: true, // Whether to auto-initialize on load
+            scrollPosition: 'center', // How to position active slides: 'start', 'center', 'end', or 'nearest'
             ...options,
         };
 
@@ -133,7 +136,36 @@ class FormChippy {
         }
 
         this.formName = this.container.getAttribute('data-fc-container') || 'form';
-        this.slides = Array.from(document.querySelectorAll(this.options.slideSelector));
+        
+        // Default to Typeform-like controlled navigation (no scrolling)
+        // Only allow scrolling when explicitly enabled with data-fc-allow-scroll
+        this.allowScrolling = this.container.hasAttribute('data-fc-allow-scroll');
+        
+        // Create or find the slide list element
+        this.slideList = this.container.querySelector(this.options.slideListSelector);
+        if (!this.slideList) {
+            // If no slide list exists, create one and move slides into it
+            this.slideList = document.createElement('div');
+            this.slideList.setAttribute('data-fc-slide-list', '');
+            
+            // Find all slides that are direct children of the container
+            const directSlides = Array.from(this.container.querySelectorAll(':scope > ' + this.options.slideSelector));
+            
+            // If direct slides exist, move them into the slide list
+            if (directSlides.length > 0) {
+                directSlides.forEach(slide => {
+                    this.slideList.appendChild(slide);
+                });
+                // Insert the slide list where the first slide was
+                this.container.appendChild(this.slideList);
+            } else {
+                // No direct slides, first add the slide list to the container
+                this.container.appendChild(this.slideList);
+            }
+        }
+        
+        // Get all slides within the slide list
+        this.slides = Array.from(this.slideList.querySelectorAll(this.options.slideSelector));
         this.totalSlides = this.slides.length;
         
         // Get validation setting from data attribute (if present) or use the default
@@ -187,6 +219,14 @@ class FormChippy {
         this.navigation.setupNavigation();
         this.progress.createProgressBar(); // Create the progress bar with proper structure
         this.progress.createNavigationDots();
+        
+        // Apply no-scroll mode by default (Typeform style UX)
+        // Only allow scrolling when explicitly requested
+        if (!this.allowScrolling) {
+            this._setupNoScrollMode();
+        } else {
+            this.debug.info('Scroll navigation enabled: Users can navigate by scrolling');
+        }
 
         // Handle window resize
         window.addEventListener('resize', this._handleResize.bind(this));
@@ -239,6 +279,43 @@ class FormChippy {
         if (!this.isAnimating) {
             this.goToSlide(this.currentSlideIndex, false);
         }
+    }
+    
+    /**
+     * Setup no-scroll mode for Typeform-like UX experience
+     * - Disables internal form scrolling while allowing page to scroll underneath
+     * - Users navigate only with buttons and dots
+     * @private
+     */
+    _setupNoScrollMode() {
+        if (!this.slideList) return;
+        
+        // Directly modify the style to prevent scrolling inside the form
+        this.slideList.style.overflowY = 'hidden';
+        this.slideList.style.scrollBehavior = 'auto';
+        
+        // Make sure the container doesn't trap scroll events
+        if (this.container) {
+            this.container.style.overflow = 'visible';
+        }
+        
+        // Key mapping for navigation only when form is focused
+        // (We're not preventing wheel or touch events to allow page scrolling)
+        this.slideList.addEventListener('keydown', (e) => {
+            // Only prevent default if the focus is within the slideList
+            if (this.slideList.contains(document.activeElement)) {
+                // Map keys to navigation actions
+                if (['ArrowDown', 'PageDown'].includes(e.key)) {
+                    e.preventDefault();
+                    this.goToNextSlide();
+                } else if (['ArrowUp', 'PageUp'].includes(e.key)) {
+                    e.preventDefault();
+                    this.goToPrevSlide();
+                }
+            }
+        });
+        
+        this.debug.info('Typeform-style navigation enabled: Form prevents internal scrolling but allows page to scroll underneath');
     }
 
     /**
@@ -596,13 +673,38 @@ class FormChippy {
             // Use the position tracker to update all UI components
             this.progress.updateProgress(progressPos);
             this.navigation.updateSlideCounter(progressPos);
+            this.navigation.updateButtonStates(index); // Explicitly update button states
             this._updateActiveSlide(index);
             
             // 3. Schedule scrolling in next frame for smoother animation
             requestAnimationFrame(() => {
-                this.slides[index].scrollIntoView({
+                const targetSlide = this.slides[index];
+                
+                // Check for slide-specific position override
+                let scrollPosition = targetSlide.getAttribute('data-fc-slide-position');
+                
+                // If no slide-specific position, use the global default
+                if (!scrollPosition) {
+                    scrollPosition = this.options.scrollPosition || 'center';
+                }
+                
+                // Smart default: Use 'start' position if slide height is larger than visible area
+                if (scrollPosition === 'center' || scrollPosition === 'end') {
+                    // Get the slide and container dimensions
+                    const slideHeight = targetSlide.offsetHeight;
+                    const containerHeight = this.slideList.offsetHeight;
+                    
+                    // If slide is taller than container, default to 'start' for better UX
+                    if (slideHeight > containerHeight * 0.8) {
+                        this.debug.info(`Large slide detected (${slideHeight}px > ${containerHeight * 0.8}px). Using 'start' position instead of '${scrollPosition}'`);
+                        scrollPosition = 'start';
+                    }
+                }
+                
+                // Apply scroll behavior
+                targetSlide.scrollIntoView({
                     behavior: animate ? 'smooth' : 'auto',
-                    block: 'start',
+                    block: scrollPosition, // Options: 'start', 'center', 'end', 'nearest'
                 });
                 
                 // Calculate appropriate cleanup delay
@@ -623,6 +725,9 @@ class FormChippy {
                         toIndex: index,
                         slideId: targetSlideId
                     });
+                    
+                    // Force button state update after animation completes
+                    this.navigation.updateButtonStates(index);
                     
                     // Process next navigation in queue if any
                     if (this._navigationState.queue.length > 0) {
@@ -814,10 +919,18 @@ const instances = {};
 
 // Auto-initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
+    // Find all containers with the data-fc-container attribute
     const containers = document.querySelectorAll('[data-fc-container]');
     
     containers.forEach((container) => {
         const formName = container.getAttribute('data-fc-container');
+        const autoInitAttr = container.getAttribute('data-fc-auto-init');
+        
+        // If auto-init is explicitly set to false, skip this container
+        if (autoInitAttr !== null && autoInitAttr === 'false') {
+            console.info(`FormChippy: Skipping auto-init for ${formName} due to data-fc-auto-init="false"`);
+            return;
+        }
         
         // Create FormChippy instance with specific container options
         instances[formName] = new FormChippy({
@@ -849,6 +962,31 @@ window.formChippy = {
             instances[formName] = instance;
         }
         return instance;
+    },
+    
+    /**
+     * Initialize all FormChippy instances in the document
+     * This can be called manually if the DOM is dynamically loaded
+     */
+    initAll: () => {
+        const containers = document.querySelectorAll('[data-fc-container]');
+        
+        containers.forEach((container) => {
+            const formName = container.getAttribute('data-fc-container');
+            const autoInitAttr = container.getAttribute('data-fc-auto-init');
+            
+            // If already initialized or auto-init is false, skip
+            if (instances[formName] || (autoInitAttr !== null && autoInitAttr === 'false')) {
+                return;
+            }
+            
+            // Create FormChippy instance with specific container options
+            instances[formName] = new FormChippy({
+                containerSelector: `[data-fc-container="${formName}"]`
+            });
+        });
+        
+        return instances;
     }
 };
 

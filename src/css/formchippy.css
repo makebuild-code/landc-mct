@@ -31,6 +31,13 @@
 /* Main container */
 [data-fc-container] {
     height: 100vh;
+    position: relative;
+}
+
+/* Slide list wrapper */
+[data-fc-slide-list] {
+    height: 100vh;
+    width: 100%;
     overflow-y: scroll;
     scroll-snap-type: y mandatory;
     scroll-behavior: smooth;

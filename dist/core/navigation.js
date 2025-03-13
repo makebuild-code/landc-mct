@@ -31,6 +31,48 @@ export class Navigation {
      * @private
      */
     _setupButtons() {
+        // ===== RESET BUTTONS =====
+        // Find all reset buttons
+        const resetButtons = this.formChippy.container.querySelectorAll(
+            '[data-fc-button="reset"], [data-fc-button-reset]'
+        );
+        
+        if (resetButtons.length > 0) {
+            this.formChippy.debug.info(`Found ${resetButtons.length} reset buttons`);
+            
+            resetButtons.forEach((button) => {
+                // Remove existing click listeners by replacing the button
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                // Add the reset event listener
+                newButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    this.formChippy.debug.info('Reset button clicked');
+                    
+                    // Get the target slide index (usually 0)
+                    let targetIndex = 0;
+                    const goToAttr = newButton.getAttribute('data-fc-go-to');
+                    
+                    if (goToAttr) {
+                        // Find slide by id if specified
+                        const targetSlide = this.formChippy.slides.findIndex(
+                            slide => slide.getAttribute('data-fc-slide') === goToAttr
+                        );
+                        if (targetSlide !== -1) {
+                            targetIndex = targetSlide;
+                        }
+                    }
+                    
+                    // Reset the form and navigate to the target slide
+                    this.formChippy.reset();
+                    this.formChippy.goToSlide(targetIndex);
+                });
+            });
+        }
+        
         // ===== NEXT BUTTONS =====
         // Find all next buttons - exclude both submit and prev buttons
         const nextButtons = this.formChippy.container.querySelectorAll(
@@ -165,7 +207,8 @@ export class Navigation {
      */
     _findActiveSlide() {
         const activeClass = this.formChippy.options.activeClass;
-        const activeSlide = this.formChippy.container.querySelector(`[data-fc-slide].${activeClass}`);
+        // Search within the slide list instead of the entire container
+        const activeSlide = this.formChippy.slideList.querySelector(`[data-fc-slide].${activeClass}`);
         
         if (activeSlide) {
             return activeSlide;
@@ -607,5 +650,62 @@ export class Navigation {
         }
         
         srCounter.textContent = `Step ${humanIndex} of ${totalSlides}`;
+        
+        // Update button states (enable/disable) based on current position
+        this.updateButtonStates(currentIndex);
+    }
+    
+    /**
+     * Update navigation button states based on current position
+     * @param {number} currentIndex - Current slide index
+     */
+    updateButtonStates(currentIndex) {
+        const totalSlides = this.formChippy.totalSlides;
+        const disabledClass = 'fc-button-disabled';
+        
+        this.formChippy.debug.info(`Updating button states for index ${currentIndex}, totalSlides=${totalSlides}`);
+        
+        // Find all prev buttons in the container
+        const prevButtons = Array.from(this.formChippy.container.querySelectorAll(
+            '[data-fc-button="prev"], [data-fc-button-prev]'
+        ));
+        
+        // Find all next buttons in the container
+        const nextButtons = Array.from(this.formChippy.container.querySelectorAll(
+            '[data-fc-button="next"], [data-fc-button-next]'
+        ));
+        
+        // Update previous buttons
+        if (prevButtons && prevButtons.length > 0) {
+            this.formChippy.debug.info(`Found ${prevButtons.length} prev buttons to update`);
+            prevButtons.forEach(button => {
+                // Disable prev buttons on first slide
+                if (currentIndex === 0) {
+                    button.classList.add(disabledClass);
+                    button.setAttribute('aria-disabled', 'true');
+                } else {
+                    button.classList.remove(disabledClass);
+                    button.setAttribute('aria-disabled', 'false');
+                }
+            });
+        }
+        
+        // Update next buttons
+        if (nextButtons && nextButtons.length > 0) {
+            this.formChippy.debug.info(`Found ${nextButtons.length} next buttons to update`);
+            nextButtons.forEach(button => {
+                // Check if this is a special button with a go-to attribute
+                const hasGoTo = button.hasAttribute('data-fc-go-to');
+                
+                // Only disable regular next buttons on last slide
+                if (!hasGoTo && currentIndex === totalSlides - 1) {
+                    button.classList.add(disabledClass);
+                    button.setAttribute('aria-disabled', 'true');
+                } else {
+                    button.classList.remove(disabledClass);
+                    button.setAttribute('aria-disabled', 'false');
+                }
+            });
+        }
     }
 }

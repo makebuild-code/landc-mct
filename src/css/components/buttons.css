@@ -51,6 +51,20 @@
     border-color: var(--fc-border-color);
 }
 
+/* Disabled button states */
+.fc-button-disabled,
+[data-fc-button].fc-button-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.fc-button-disabled:hover,
+[data-fc-button].fc-button-disabled:hover {
+    background-color: inherit;
+    border-color: inherit;
+}
+
 /* Disabled state */
 .fc-button:disabled,
 .fc-button.disabled,
