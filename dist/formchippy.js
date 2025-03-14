@@ -1,7 +1,11 @@
 /**
- * FormChippy.js v1.1.0
+ * FormChippy.js v1.2.0
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.2.0:
+ * - Percentage-based scroll positioning (e.g., data-fc-slide-position="25%")
+ * - Improved overflow control to prevent scrolling after slide navigation
  *
  * @license MIT
  * @author JP Dionisio
