@@ -153,6 +153,7 @@
                 data-fc-container="demo-form"
                 data-fc-debuglog="true"
                 data-fc-validate="false"
+                data-fc-allow-scroll="false"
             >
                 <!-- Floating navigation buttons fixed at bottom left -->
                 <div class="floating-nav">
@@ -205,7 +206,10 @@
                     </div>
 
                     <!-- Slide 2: Basic Text Input -->
-                    <div data-fc-slide="basic-info">
+                    <div
+                        data-fc-slide="basic-info"
+                        data-fc-slide-position="25%"
+                    >
                         <div data-fc-content>
                             <h2>Basic Information</h2>
 
@@ -234,6 +238,9 @@
                             <div class="fc-button-group">
                                 <button data-fc-button="prev">Back</button>
                                 <button data-fc-button="next">Continue</button>
+                            </div>
+                            <div style="height: 120vh; background-color: red">
+                                spacer
                             </div>
                         </div>
                     </div>
@@ -459,10 +466,7 @@
         </div>
 
         <!-- FormChippy Script - Just include the library and it auto-initializes -->
-        <script
-            type="module"
-            src="http://127.0.0.1:5500/dist/formchippy.js"
-        ></script>
+        <script type="module" src="../dist/formchippy.js"></script>
         <!-- That's it! Everything is handled by data attributes.
              FormChippy auto-initializes and handles:
              - Form navigation
@@ -471,5 +475,107 @@
              - Progress tracking
              - Form reset
         -->
+
+        <!-- Style Change Monitor Script -->
+        <script>
+            console.log('DEBUG: Monitor script loaded')
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('DEBUG: DOMContentLoaded fired')
+                setTimeout(() => {
+                    console.log('DEBUG: Monitor setup starting')
+                    // Give FormChippy time to initialize
+                    const slideList = document.querySelector(
+                        '[data-fc-slide-list]'
+                    )
+                    if (!slideList) {
+                        console.error('Slide list not found for monitoring')
+                        return
+                    }
+
+                    console.log('INITIAL STYLE STATE:', {
+                        overflowY: slideList.style.overflowY,
+                        scrollBehavior: slideList.style.scrollBehavior,
+                        width: slideList.style.width,
+                    })
+
+                    // Create a style monitor box
+                    const monitor = document.createElement('div')
+                    monitor.style.position = 'fixed'
+                    monitor.style.top = '10px'
+                    monitor.style.right = '10px'
+                    monitor.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'
+                    monitor.style.color = 'white'
+                    monitor.style.padding = '10px'
+                    monitor.style.borderRadius = '5px'
+                    monitor.style.zIndex = '10000'
+                    monitor.style.fontSize = '12px'
+                    monitor.style.fontFamily = 'monospace'
+                    monitor.style.maxWidth = '300px'
+                    monitor.innerHTML = `<div>Overflow-Y: <span id="overflow-monitor">initializing...</span></div>`
+                    document.body.appendChild(monitor)
+
+                    // Update the monitor display
+                    function updateMonitor() {
+                        const overflowMonitor =
+                            document.getElementById('overflow-monitor')
+                        if (overflowMonitor) {
+                            overflowMonitor.textContent =
+                                slideList.style.overflowY || 'not set'
+                            overflowMonitor.style.color =
+                                slideList.style.overflowY === 'hidden'
+                                    ? 'lightgreen'
+                                    : 'orange'
+                        }
+                    }
+
+                    updateMonitor() // Initial update
+
+                    // Set up the mutation observer
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            if (
+                                mutation.type === 'attributes' &&
+                                mutation.attributeName === 'style'
+                            ) {
+                                const styles = {
+                                    overflowY: slideList.style.overflowY,
+                                    scrollBehavior:
+                                        slideList.style.scrollBehavior,
+                                    width: slideList.style.width,
+                                    timestamp: new Date()
+                                        .toISOString()
+                                        .substr(11, 12), // Time in HH:MM:SS.mmm format
+                                }
+
+                                console.log('STYLE CHANGED:', styles)
+                                updateMonitor()
+                            }
+                        })
+                    })
+
+                    // Observe style attribute changes
+                    observer.observe(slideList, {
+                        attributes: true,
+                        attributeFilter: ['style'],
+                    })
+                    console.log('Style observer attached to slide list')
+
+                    // Also log clicks on navigation buttons to track user actions
+                    const navButtons =
+                        document.querySelectorAll('[data-fc-button]')
+                    navButtons.forEach((button) => {
+                        button.addEventListener('click', function () {
+                            console.log('BUTTON CLICKED:', {
+                                button: this.getAttribute('data-fc-button'),
+                                currentOverflow: slideList.style.overflowY,
+                                timestamp: new Date()
+                                    .toISOString()
+                                    .substr(11, 12),
+                            })
+                        })
+                    })
+                }, 500) // Wait for FormChippy to fully initialize
+            })
+        </script>
     </body>
 </html>

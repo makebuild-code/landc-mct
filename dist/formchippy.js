@@ -41,7 +41,7 @@ class FormChippy {
             useIntersectionObserver: false, // Disable auto-navigation by scrolling by default
             validateByDefault: true, // Whether to validate by default (can be overridden by data-fc-validate attribute)
             autoInitialize: true, // Whether to auto-initialize on load
-            scrollPosition: 'center', // How to position active slides: 'start', 'center', 'end', or 'nearest'
+            scrollPosition: 'center', // How to position active slides: 'start', 'center', 'end', 'nearest', or percentage (e.g., '25%')
             ...options,
         };
 
@@ -139,8 +139,8 @@ class FormChippy {
         this.formName = this.container.getAttribute('data-fc-container') || 'form';
         
         // Default to Typeform-like controlled navigation (no scrolling)
-        // Only allow scrolling when explicitly enabled with data-fc-allow-scroll
-        this.allowScrolling = this.container.hasAttribute('data-fc-allow-scroll');
+        // Only allow scrolling when explicitly enabled with data-fc-allow-scroll="true"
+        this.allowScrolling = this.container.getAttribute('data-fc-allow-scroll') === 'true';
         
         // Create or find the slide list element
         this.slideList = this.container.querySelector(this.options.slideListSelector);
@@ -195,6 +195,9 @@ class FormChippy {
         this.validation = new Validation(this);
         this.navigation = new Navigation(this);
         this.progress = new Progress(this);
+        
+        // Apply essential styles via JavaScript to avoid stylesheet dependency
+        this._applyCoreStyles();
         
         // Log initialization
         this.debug.info('FormChippy initializing', {
@@ -283,6 +286,61 @@ class FormChippy {
     }
     
     /**
+     * Apply core styles via JavaScript to ensure scrolling works without CSS dependencies
+     * This method is called during initialization to set up essential styles
+     * @private
+     */
+    _applyCoreStyles() {
+        if (!this.slideList || !this.container) return;
+        
+        // Apply container styles
+        Object.assign(this.container.style, {
+            position: 'relative',
+            width: '100%'
+        });
+        
+        // Apply slide list styles for scrolling behavior
+        Object.assign(this.slideList.style, {
+            width: '100%',
+            overflowY: 'scroll', // Default to scrollable
+            scrollBehavior: 'smooth',      // For smooth scrolling
+            position: 'relative'
+        });
+        
+        // Apply basic styles to slides without hiding them
+        this.slides.forEach((slide, index) => {
+            // Apply base styles to all slides
+            Object.assign(slide.style, {
+                width: '100%',
+                boxSizing: 'border-box',
+                scrollMargin: '0'
+            });
+            
+            // Set active class only for the first slide
+            if (index === 0) {
+                slide.classList.add(this.options.activeClass);
+            } else {
+                slide.classList.remove(this.options.activeClass);
+            }
+            
+            // Apply styles to content elements
+            const contentElement = slide.querySelector('[data-fc-content]');
+            if (contentElement) {
+                Object.assign(contentElement.style, {
+                    width: '100%', 
+                    maxWidth: '600px',
+                    padding: '2rem',
+                    boxSizing: 'border-box',
+                    overflowY: 'visible',
+                    maxHeight: ''
+                });
+            }
+        });
+        
+        this.debug.info('Enhanced core styles applied with improved slide visibility control');
+    }
+
+    /**
      * Setup no-scroll mode for Typeform-like UX experience
      * - Disables internal form scrolling while allowing page to scroll underneath
      * - Users navigate only with buttons and dots
@@ -294,6 +352,7 @@ class FormChippy {
         // Directly modify the style to prevent scrolling inside the form
         this.slideList.style.overflowY = 'hidden';
         this.slideList.style.scrollBehavior = 'auto';
+        this.slideList.style.scrollSnapType = 'none'; // Disable snap points in no-scroll mode
         
         // Make sure the container doesn't trap scroll events
         if (this.container) {
@@ -545,6 +604,8 @@ class FormChippy {
         firstFocusable.addEventListener('keydown', firstHandler);
         lastFocusable.addEventListener('keydown', lastHandler);
     }
+    
+    // Simplified approach now handled directly in _applyCoreStyles
 
     /**
      * Go to a specific slide
@@ -683,30 +744,147 @@ class FormChippy {
                 
                 // Check for slide-specific position override
                 let scrollPosition = targetSlide.getAttribute('data-fc-slide-position');
+                let percentageMatch = false;
+                let percentageValue = 0;
                 
                 // If no slide-specific position, use the global default
                 if (!scrollPosition) {
                     scrollPosition = this.options.scrollPosition || 'center';
                 }
                 
+                // Check if scrollPosition is a percentage value
+                if (scrollPosition && scrollPosition.endsWith('%')) {
+                    percentageMatch = true;
+                    percentageValue = parseFloat(scrollPosition) / 100;
+                    // Ensure value is between 0 and 1
+                    percentageValue = Math.max(0, Math.min(1, percentageValue));
+                    this.debug.info(`Using percentage scroll position: ${scrollPosition} (${percentageValue * 100}% from top)`); 
+                }
+                
                 // Smart default: Use 'start' position if slide height is larger than visible area
-                if (scrollPosition === 'center' || scrollPosition === 'end') {
+                if (!percentageMatch && (scrollPosition === 'center' || scrollPosition === 'end')) {
                     // Get the slide and container dimensions
                     const slideHeight = targetSlide.offsetHeight;
-                    const containerHeight = this.slideList.offsetHeight;
                     
-                    // If slide is taller than container, default to 'start' for better UX
-                    if (slideHeight > containerHeight * 0.8) {
-                        this.debug.info(`Large slide detected (${slideHeight}px > ${containerHeight * 0.8}px). Using 'start' position instead of '${scrollPosition}'`);
+                    // Calculate the inner content height of the slide list (accounting for padding)
+                    const slideListStyles = window.getComputedStyle(this.slideList);
+                    const paddingTop = parseInt(slideListStyles.paddingTop, 10) || 0;
+                    const paddingBottom = parseInt(slideListStyles.paddingBottom, 10) || 0;
+                    const containerHeight = this.slideList.offsetHeight;
+                    const contentHeight = containerHeight - paddingTop - paddingBottom;
+                    
+                    // If slide is taller than available content height, ALWAYS default to 'start' for scrollable content
+                    if (slideHeight > contentHeight * 0.9) { // Using 90% as threshold to ensure we catch most cases
+                        this.debug.info(`Large slide detected (${slideHeight}px > available content height ${contentHeight}px). Using 'start' position for better scrolling`);
                         scrollPosition = 'start';
+                        
+                        // We no longer enable scrolling for large slides
+                        // The slide content itself can scroll if needed, but the container shouldn't
                     }
                 }
                 
-                // Apply scroll behavior
-                targetSlide.scrollIntoView({
-                    behavior: animate ? 'smooth' : 'auto',
-                    block: scrollPosition, // Options: 'start', 'center', 'end', 'nearest'
+                // TypeForm-style approach with pure JavaScript control of scrolling
+                // No CSS dependencies - all styling is applied through JavaScript
+                
+                // Simplified approach - no slide size differentiation
+                const contentElement = targetSlide.querySelector('[data-fc-content]');
+                
+                // Apply essential slide list styles for scrolling
+                // Start with scroll enabled to allow the scrolling operation to work
+                Object.assign(this.slideList.style, {
+                    width: '100%',
+                    overflowY: 'scroll',
+                    scrollBehavior: animate ? 'smooth' : 'auto'
                 });
+                
+                // Only manage the active class on slides without hiding others
+                this.slides.forEach(slide => {
+                    // Reset any previously applied content styles
+                    const slideContent = slide.querySelector('[data-fc-content]');
+                    if (slideContent) {
+                        // Reset content properties
+                        Object.assign(slideContent.style, {
+                            width: '100%',
+                            maxWidth: '600px',
+                            padding: '2rem',
+                            boxSizing: 'border-box',
+                            position: 'relative',
+                            overflow: '',
+                            maxHeight: ''
+                        });
+                    }
+                    
+                    if (slide !== targetSlide) {
+                        // Only remove active class, don't hide slides
+                        slide.classList.remove(this.options.activeClass);
+                    }
+                });
+                
+                // Mark target slide as active without hiding others
+                targetSlide.classList.add(this.options.activeClass);
+                
+                // Make target slide active - no additional styling
+                targetSlide.classList.add(this.options.activeClass);
+                
+                // Focus first focusable element in the slide if appropriate
+                const firstFocusable = targetSlide.querySelector('input, select, textarea, button, [tabindex]:not([tabindex="-1"])');
+                if (firstFocusable && !this.isAnimating && window.innerWidth > 768) {
+                    setTimeout(() => {
+                        firstFocusable.focus();
+                    }, animate ? this.options.animationDelay : 0);
+                }
+                
+                // No scroll handlers to clean up
+                
+                // Apply scroll behavior to go to the target slide
+                if (percentageMatch) {
+                    // Manual percentage-based scrolling
+                    const container = this.slideList;
+                    const targetRect = targetSlide.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+                    
+                    // Calculate the scroll position using the percentage
+                    // The percentage represents how far down from the top the slide should be
+                    const containerHeight = container.clientHeight;
+                    const targetOffset = targetSlide.offsetTop;
+                    const targetHeight = targetSlide.offsetHeight;
+                    
+                    // Calculate the scroll position based on percentage from top
+                    const scrollY = targetOffset - (containerHeight * percentageValue) + (targetHeight * percentageValue);
+                    
+                    // Perform the scroll with desired behavior
+                    container.scrollTo({
+                        top: scrollY,
+                        behavior: animate ? 'smooth' : 'auto'
+                    });
+                    
+                    // After scrolling, set overflow-y to hidden (adding a timeout to ensure scroll completes)
+                    setTimeout(() => {
+                        this.slideList.style.overflowY = 'hidden';
+                    }, animate ? 300 : 0);
+                    
+                    this.debug.info(`Percentage scrolling: ${percentageValue * 100}% from top, scrollY: ${scrollY}px`);
+                } else {
+                    // Standard scrollIntoView for predefined positions
+                    targetSlide.scrollIntoView({
+                        behavior: animate ? 'smooth' : 'auto',
+                        block: scrollPosition, // Options: 'start', 'center', 'end', 'nearest'
+                    });
+                    
+                    // After scrolling, set overflow-y to hidden (adding a timeout to ensure scroll completes)
+                    setTimeout(() => {
+                        this.slideList.style.overflowY = 'hidden';
+                    }, animate ? 300 : 0);
+                }
+                
+                // Ensure content elements have proper overflow 
+                if (contentElement) {
+                    // Only set overflow properties to ensure content displays properly
+                    Object.assign(contentElement.style, {
+                        overflowY: 'visible',  // No scroll restriction
+                        maxHeight: ''           // No height restriction
+                    });
+                }
                 
                 // Calculate appropriate cleanup delay
                 const animationDuration = animate ? this.options.animationDelay + 50 : 50;
