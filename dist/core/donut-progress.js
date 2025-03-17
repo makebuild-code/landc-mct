@@ -1,6 +1,20 @@
 /**
  * DonutProgress.js
- * Handles the circular/donut progress indicator
+ * Handles the circular/donut progress indicator for FormChippy
+ *
+ * Features:
+ * - Circular progress visualization as an alternative to the linear progress bar
+ * - Center text showing completion percentage
+ * - Automatically syncs with the main progress bar
+ * - Smooth animations during progress changes
+ *
+ * Usage:
+ * - Add an element with [data-fc-donut-container] attribute
+ * - The donut will be automatically created and updated during navigation
+ * - Customize appearance via CSS variables
+ *
+ * Example:
+ * <div data-fc-donut-container style="--donut-size: 80px; --donut-thickness: 8px;"></div>
  */
 
 export class DonutProgress {

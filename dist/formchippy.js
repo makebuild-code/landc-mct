@@ -1,7 +1,12 @@
 /**
- * FormChippy.js v1.2.0
+ * FormChippy.js v1.3.0
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.3.0:
+ * - Progress fraction indicator ("Step X of Y") integrated in core library
+ * - Donut progress indicator for circular visualizations
+ * - Enhanced progress tracking and visualization options
  *
  * New in v1.2.0:
  * - Percentage-based scroll positioning (e.g., data-fc-slide-position="25%")

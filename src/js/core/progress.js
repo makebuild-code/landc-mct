@@ -1,6 +1,16 @@
 /**
  * Progress.js
- * Handles progress indicators and navigation dots
+ * Handles progress indicators, navigation dots, and progress fraction display
+ *
+ * Features:
+ * - Progress bar: Visual indicator of form completion progress
+ * - Navigation dots: Clickable dots for direct navigation between slides
+ * - Progress fraction: Text-based "Step X of Y" indicator for current position
+ *
+ * Usage:
+ * - Progress bar: Add an element with [data-fc-progress] attribute
+ * - Navigation dots: Add an element with [data-fc-dots] attribute
+ * - Progress fraction: Add an element with [data-fc-progress-fraction-container] attribute
  */
 
 export class Progress {

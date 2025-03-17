@@ -1,7 +1,12 @@
 /**
- * FormChippy.js v1.2.0 (Standalone)
+ * FormChippy.js v1.3.0 (Standalone)
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.3.0:
+ * - Progress fraction indicator ("Step X of Y") integrated in core library
+ * - Donut progress indicator for circular visualizations
+ * - Enhanced progress tracking and visualization options
  *
  * New in v1.2.0:
  * - Percentage-based scroll positioning (e.g., data-fc-slide-position="25%")
@@ -933,7 +938,17 @@ class Validation {
 
 /**
  * Progress.js
- * Handles progress indicators and navigation dots
+ * Handles progress indicators, navigation dots, and progress fraction display
+ *
+ * Features:
+ * - Progress bar: Visual indicator of form completion progress
+ * - Navigation dots: Clickable dots for direct navigation between slides
+ * - Progress fraction: Text-based "Step X of Y" indicator for current position
+ *
+ * Usage:
+ * - Progress bar: Add an element with [data-fc-progress] attribute
+ * - Navigation dots: Add an element with [data-fc-dots] attribute
+ * - Progress fraction: Add an element with [data-fc-progress-fraction-container] attribute
  */
 
 class Progress {
@@ -3738,9 +3753,14 @@ class DateInput {
 
 
 /**
- * FormChippy.js v1.2.0
+ * FormChippy.js v1.3.0
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.3.0:
+ * - Progress fraction indicator ("Step X of Y") integrated in core library
+ * - Donut progress indicator for circular visualizations
+ * - Enhanced progress tracking and visualization options
  *
  * New in v1.2.0:
  * - Percentage-based scroll positioning (e.g., data-fc-slide-position="25%")
