@@ -6,3 +6,4 @@
 -   validation per slide. check validation from API. connect with TypeScript guy.
 -   go to slide attribute button
 -   go to slide deppending on input
+-   donut bar should work even if progress bar element is not present

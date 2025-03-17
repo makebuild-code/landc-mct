@@ -54,20 +54,39 @@ function readMainFile(filePath) {
     .replace(/class FormChippy/g, 'window.FormChippy = class FormChippy');
 }
 
+// Extract header comments from main file
+function extractHeader(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const headerMatch = content.match(/\/\*\*[\s\S]*?\*\//);
+  
+  if (headerMatch) {
+    // Get the header and convert to standalone version
+    let header = headerMatch[0];
+    
+    // Replace version to indicate it's standalone
+    header = header.replace(/(v\d+\.\d+\.\d+)/, '$1 (Standalone)');
+    
+    return header;
+  }
+  
+  // Fallback if no header found
+  return `/**
+ * FormChippy.js (Standalone)
+ * A smooth, vertical scrolling multi-step form experience
+ *
+ * @license MIT
+ */`;
+}
+
 // Build the standalone file
 function buildStandalone() {
   console.log('Building standalone version of FormChippy...');
   
-  // Header with version info and IIFE start
-  let output = `/**
- * FormChippy.js v1.1.0 (Standalone)
- * A smooth, vertical scrolling multi-step form experience
- * 
- * @license MIT
- * @author JP
- */
-(function() {
-  'use strict';
+  // Get header from main file and add IIFE start
+  const header = extractHeader(srcMain);
+  let output = `${header}
+;(function () {
+    'use strict'
 
 `;
 

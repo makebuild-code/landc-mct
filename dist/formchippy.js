@@ -16,6 +16,7 @@
 import { Navigation } from './core/navigation.js';
 import { Validation } from './core/validation.js';
 import { Progress } from './core/progress.js';
+import { DonutProgress } from './core/donut-progress.js';
 import { Debug } from './core/debug.js';
 
 // Import question types
@@ -61,6 +62,7 @@ class FormChippy {
         this.navigation = null;
         this.validation = null;
         this.progress = null;
+        this.donutProgress = null;
         this.debug = null;
         this.questionHandlers = {};
 
@@ -199,6 +201,7 @@ class FormChippy {
         this.validation = new Validation(this);
         this.navigation = new Navigation(this);
         this.progress = new Progress(this);
+        this.donutProgress = new DonutProgress(this);
         
         // Apply essential styles via JavaScript to avoid stylesheet dependency
         this._applyCoreStyles();
@@ -227,6 +230,8 @@ class FormChippy {
         this.navigation.setupNavigation();
         this.progress.createProgressBar(); // Create the progress bar with proper structure
         this.progress.createNavigationDots();
+        this.progress.createProgressFraction(); // Initialize the progress fraction indicator
+        this.donutProgress.init(); // Initialize the donut progress indicator if container exists
         
         // Apply no-scroll mode by default (Typeform style UX)
         // Only allow scrolling when explicitly requested

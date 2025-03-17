@@ -121,6 +121,52 @@ export class Progress {
     }
     
     /**
+     * Create progress fraction indicator
+     * Creates or updates elements for showing step count (e.g., "Step 1 of 5")
+     */
+    createProgressFraction() {
+        // Check for existing fraction elements first
+        const numeratorElement = this.formChippy.container.querySelector('[data-fc-progress-fraction="numerator"]');
+        const denominatorElement = this.formChippy.container.querySelector('[data-fc-progress-fraction="denominator"]');
+        
+        // If both elements already exist, we don't need to create them
+        if (numeratorElement && denominatorElement) {
+            this.formChippy.debug.info('Progress fraction elements already exist');
+            return;
+        }
+        
+        // If elements don't exist but there's a container marked for progress fraction, create the elements
+        const fractionContainer = this.formChippy.container.querySelector('[data-fc-progress-fraction-container]');
+        if (fractionContainer) {
+            // Clear existing content
+            fractionContainer.innerHTML = '';
+            
+            // Create structure: Step <span>1</span> of <span>5</span>
+            const prefix = document.createTextNode('Step ');
+            const numerator = document.createElement('span');
+            numerator.setAttribute('data-fc-progress-fraction', 'numerator');
+            numerator.textContent = '1'; // Default value, will be updated
+            
+            const separator = document.createTextNode(' of ');
+            
+            const denominator = document.createElement('span');
+            denominator.setAttribute('data-fc-progress-fraction', 'denominator');
+            denominator.textContent = this.formChippy.totalSlides.toString();
+            
+            // Assemble the elements
+            fractionContainer.appendChild(prefix);
+            fractionContainer.appendChild(numerator);
+            fractionContainer.appendChild(separator);
+            fractionContainer.appendChild(denominator);
+            
+            this.formChippy.debug.info('Created progress fraction elements', {
+                container: fractionContainer,
+                totalSlides: this.formChippy.totalSlides
+            });
+        }
+    }
+
+    /**
      * Update progress indicators based on current slide
      * @param {number} index - Current slide index
      */
@@ -160,17 +206,19 @@ export class Progress {
             const totalSlides = this.formChippy.totalSlides;
             
             // Calculate progress based on true current slide position
-            let progress;
+            let currentIndex, progress;
             if (slideTracker) {
                 // Use the position tracker for more accurate progress
-                progress = ((slideTracker.currentIndex + 1) / totalSlides) * 100;
+                currentIndex = slideTracker.currentIndex;
+                progress = ((currentIndex + 1) / totalSlides) * 100;
                 this.formChippy.debug.info(`Progress updated from tracker: ${progress.toFixed(1)}%`, {
-                    currentIndex: slideTracker.currentIndex,
+                    currentIndex: currentIndex,
                     totalSlides: totalSlides
                 });
             } else {
                 // Fallback to standard calculation
-                progress = ((index + 1) / totalSlides) * 100;
+                currentIndex = index;
+                progress = ((currentIndex + 1) / totalSlides) * 100;
             }
             
             // Get the correct elements (specifically targeting the fill element)
@@ -196,6 +244,41 @@ export class Progress {
             if (progressWrap) {
                 progressWrap.setAttribute('aria-valuenow', progress);
             }
+            
+            // Update the progress fraction (step counter)
+            this.updateProgressFraction(currentIndex, totalSlides);
+            
+            // Update the donut progress indicator if available
+            if (this.formChippy.donutProgress && this.formChippy.donutProgress.initialized) {
+                this.formChippy.donutProgress.updateProgress(progress);
+                this.formChippy.debug.info(`Donut progress synced with main progress: ${progress.toFixed(1)}%`);
+            }
+        }
+    }
+    
+    /**
+     * Update the progress fraction (step counter) elements
+     * @param {number} currentIndex - Current slide index (0-based)
+     * @param {number} totalSlides - Total number of slides
+     */
+    updateProgressFraction(currentIndex, totalSlides) {
+        // Find the fraction elements
+        const numeratorElement = this.formChippy.container.querySelector('[data-fc-progress-fraction="numerator"]');
+        const denominatorElement = this.formChippy.container.querySelector('[data-fc-progress-fraction="denominator"]');
+        
+        // Update numerator (current step, 1-based)
+        if (numeratorElement) {
+            // Add 1 to make it 1-indexed for users
+            numeratorElement.textContent = (currentIndex + 1).toString();
+        }
+        
+        // Update denominator (total slides)
+        if (denominatorElement) {
+            denominatorElement.textContent = totalSlides.toString();
+        }
+        
+        if (numeratorElement || denominatorElement) {
+            this.formChippy.debug.info(`Updated progress fraction: ${currentIndex + 1}/${totalSlides}`);
         }
     }
     
