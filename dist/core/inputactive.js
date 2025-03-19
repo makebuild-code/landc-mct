@@ -1,7 +1,42 @@
 /**
- * InputActive.js
- * Adds active state classes to form elements when they are checked/selected
- * Inspired by Finsweet's InputActive attribute
+ * InputActive.js - Part of FormChippy v1.3.1
+ * ==================================================
+ * Adds active state classes to form elements when they are checked/selected.
+ * This enhances the user experience by providing visual feedback for form interactions.
+ * Inspired by Finsweet's InputActive attribute.
+ * 
+ * Features:
+ * - Automatically adds 'checked' (or custom) class to active input elements
+ * - Works with radio buttons, checkboxes, and other selectable inputs
+ * - Updates in real-time as users interact with the form
+ * - Supports custom active class names through configuration
+ * - Integrates seamlessly with FormChippy's navigation and validation
+ * 
+ * How it works:
+ * When a user selects an input (like checking a checkbox), the module adds
+ * a CSS class to the parent element, making it easy to style active states
+ * without complex CSS selectors or JavaScript.
+ * 
+ * Usage Example (HTML):
+ * 
+ * <div class="input-container">
+ *   <input type="checkbox" id="option1" data-fc-input>
+ *   <label for="option1">Option 1</label>
+ * </div>
+ * 
+ * The container will receive the 'checked' class when selected
+ * 
+ * CSS for styling active states:
+ * 
+ * .input-container.checked {
+ *   background-color: #e0f7fa;
+ *   border-color: #26c6da;
+ * }
+ * 
+ * @author JP Dionisio
+ * @since v1.3.0
+ * @module core/inputactive
+ * @license MIT
  */
 
 export class InputActive {
