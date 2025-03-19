@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormChippy - InputActive Example</title>
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        /* Form styles */
+        .fc-slide {
+            padding: 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .fc-slide-list {
+            overflow: hidden;
+        }
+        .fc-content {
+            margin-bottom: 20px;
+        }
+        .fc-nav {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        /* Progress bar */
+        .progress-container {
+            margin: 20px 0;
+            height: 8px;
+            background-color: #e5e5e5;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #3498db;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+        
+        /* Input active styles */
+        /* Define a visible active state that will be applied by the InputActive module */
+        .is-active-input {
+            border: 2px solid #3498db !important;
+            background-color: #eaf5fd !important;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2) !important;
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+        
+        /* Radio and checkbox styling */
+        .input-option {
+            display: block;
+            margin-bottom: 10px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        /* Make Webflow-like radio classes for demonstration */
+        .w-radio,
+        .w-checkbox {
+            display: block;
+            margin-bottom: 10px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        /* Custom active class example */
+        .my-active-class {
+            background-color: #e1f5ec !important;
+            border-color: #27ae60 !important;
+            box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" data-fc-container="example-form">
+        <h1>FormChippy InputActive Example</h1>
+        
+        <p>This example demonstrates the new InputActive module which adds active state classes to inputs when they're checked/selected.</p>
+        
+        <!-- Progress bar -->
+        <div class="progress-container">
+            <div class="progress-bar" data-fc-progress></div>
+        </div>
+        
+        <div data-fc-slide-list>
+            <!-- Slide 1: Radio buttons -->
+            <div class="fc-slide" data-fc-slide>
+                <div class="fc-content">
+                    <h2>Standard Radio Buttons</h2>
+                    <p>The checked radio will receive the default active class.</p>
+                    
+                    <!-- Radio group using the w-radio Webflow style classes -->
+                    <div class="radio-group">
+                        <label class="w-radio">
+                            <input type="radio" name="radio-group" value="option1" data-fc-input>
+                            <span>Option 1</span>
+                        </label>
+                        <label class="w-radio">
+                            <input type="radio" name="radio-group" value="option2" data-fc-input>
+                            <span>Option 2</span>
+                        </label>
+                        <label class="w-radio">
+                            <input type="radio" name="radio-group" value="option3" data-fc-input>
+                            <span>Option 3</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="fc-nav">
+                    <button type="button" data-fc-button="next">Next</button>
+                </div>
+            </div>
+            
+            <!-- Slide 2: Custom active class -->
+            <div class="fc-slide" data-fc-slide>
+                <div class="fc-content">
+                    <h2>Custom Active Class</h2>
+                    <p>These radio buttons use a custom active class.</p>
+                    
+                    <div class="radio-group">
+                        <label class="input-option" data-fc-active-class="my-active-class">
+                            <input type="radio" name="custom-radio" value="custom1" data-fc-input>
+                            <span>Custom Option 1</span>
+                        </label>
+                        <label class="input-option" data-fc-active-class="my-active-class">
+                            <input type="radio" name="custom-radio" value="custom2" data-fc-input>
+                            <span>Custom Option 2</span>
+                        </label>
+                        <label class="input-option" data-fc-active-class="my-active-class">
+                            <input type="radio" name="custom-radio" value="custom3" data-fc-input>
+                            <span>Custom Option 3</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="fc-nav">
+                    <button type="button" data-fc-button="prev">Previous</button>
+                    <button type="button" data-fc-button="next">Next</button>
+                </div>
+            </div>
+            
+            <!-- Slide 3: Checkboxes -->
+            <div class="fc-slide" data-fc-slide>
+                <div class="fc-content">
+                    <h2>Checkboxes</h2>
+                    <p>Multiple checkboxes can be active at once.</p>
+                    
+                    <div class="checkbox-group">
+                        <label class="w-checkbox">
+                            <input type="checkbox" name="check1" value="check1" data-fc-input>
+                            <span>Checkbox 1</span>
+                        </label>
+                        <label class="w-checkbox">
+                            <input type="checkbox" name="check2" value="check2" data-fc-input>
+                            <span>Checkbox 2</span>
+                        </label>
+                        <label class="w-checkbox">
+                            <input type="checkbox" name="check3" value="check3" data-fc-input>
+                            <span>Checkbox 3</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="fc-nav">
+                    <button type="button" data-fc-button="prev">Previous</button>
+                    <button type="button" data-fc-button="next">Next</button>
+                </div>
+            </div>
+            
+            <!-- Slide 4: Mixed inputs with container -->
+            <div class="fc-slide" data-fc-slide>
+                <div class="fc-content">
+                    <h2>Input Containers</h2>
+                    <p>Using data-fc-input-container to define the active element.</p>
+                    
+                    <div class="mixed-inputs">
+                        <div class="input-option" data-fc-input-container>
+                            <input type="radio" name="container-group" value="container1" data-fc-input>
+                            <strong>Option with container</strong>
+                            <p>This option uses a container to define the element that receives the active class.</p>
+                        </div>
+                        <div class="input-option" data-fc-input-container>
+                            <input type="radio" name="container-group" value="container2" data-fc-input>
+                            <strong>Another option with container</strong>
+                            <p>The container makes it easier to style complex input layouts.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="fc-nav">
+                    <button type="button" data-fc-button="prev">Previous</button>
+                    <button type="button" data-fc-button="reset">Reset Form</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import FormChippy from '../src/js/formchippy.js';
+        
+        // Initialize FormChippy
+        const formChippy = new FormChippy({
+            containerSelector: '[data-fc-container="example-form"]',
+            scrollPosition: 'start'
+        });
+        
+        // You can manually refresh the input active states if needed
+        // This is useful if you dynamically add new inputs
+        document.querySelector('[data-fc-button="reset"]').addEventListener('click', () => {
+            setTimeout(() => {
+                formChippy.inputActive.refresh();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

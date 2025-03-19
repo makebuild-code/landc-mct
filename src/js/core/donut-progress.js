@@ -7,14 +7,23 @@
  * - Center text showing completion percentage
  * - Automatically syncs with the main progress bar
  * - Smooth animations during progress changes
+ * - Works with dynamic slides and slide groups
+ * - Handles conditional slide visibility
  *
  * Usage:
  * - Add an element with [data-fc-donut-container] attribute
  * - The donut will be automatically created and updated during navigation
- * - Customize appearance via CSS variables
+ * - Customize appearance via CSS variables or data attributes
  *
  * Example:
- * <div data-fc-donut-container style="--donut-size: 80px; --donut-thickness: 8px;"></div>
+ * <div data-fc-donut-container 
+ *      data-fc-donut-size="80" 
+ *      data-fc-donut-stroke-width="8"
+ *      data-fc-donut-track-color="#f0f0f0"
+ *      data-fc-donut-progress-color="#4a90e2"
+ *      data-fc-donut-text-color="#333333"
+ *      data-fc-donut-show-text="true">
+ * </div>
  */
 
 export class DonutProgress {
@@ -26,6 +35,10 @@ export class DonutProgress {
         this.donutText = null;
         this.circumference = 0;
         this.initialized = false;
+        this.observer = null;
+        this.currentPercent = 0;
+        this.visibleSlides = [];
+        this.totalVisibleSlides = 0;
     }
 
     /**
@@ -49,6 +62,18 @@ export class DonutProgress {
         this.formChippy.debug.info('Initializing donut progress indicator');
         this.createDonutProgress();
         this.initialized = true;
+        
+        // Set up event listeners for dynamic slide changes
+        this._setupEventListeners();
+        
+        // Calculate initial visible slides
+        this._updateVisibleSlides();
+        
+        // Set up mutation observer to detect slide visibility changes
+        this._setupMutationObserver();
+        
+        // Initial update
+        this.updateProgressFromCurrentSlide();
     }
 
     /**
@@ -68,8 +93,8 @@ export class DonutProgress {
         
         // Create the SVG element
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', String(size));
-        svg.setAttribute('height', String(size));
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
         svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
         svg.setAttribute('data-fc-donut-svg', '');
         
@@ -139,6 +164,9 @@ export class DonutProgress {
         // Ensure percent is a number and within bounds
         percent = Math.max(0, Math.min(100, parseFloat(percent) || 0));
         
+        // Store current percent for reference
+        this.currentPercent = percent;
+        
         // Update the text if it exists
         if (this.donutText) {
             this.donutText.textContent = `${Math.round(percent)}%`;
@@ -166,5 +194,133 @@ export class DonutProgress {
         }
         
         this.formChippy.debug.info(`Donut progress updated to ${percent}%`);
+    }
+    
+    /**
+     * Update progress based on the current slide index
+     * This calculates progress considering only visible slides
+     */
+    updateProgressFromCurrentSlide() {
+        if (!this.initialized) return;
+        
+        // Make sure we have the latest visible slides
+        this._updateVisibleSlides();
+        
+        // Calculate progress based on visible slides
+        const currentIndex = this.formChippy.currentSlideIndex;
+        let visibleIndex = 0;
+        
+        // Find the position of the current slide in the visible slides array
+        for (let i = 0; i < this.visibleSlides.length; i++) {
+            const slideIndex = this.formChippy.slides.indexOf(this.visibleSlides[i]);
+            if (slideIndex === currentIndex) {
+                visibleIndex = i;
+                break;
+            }
+        }
+        
+        // Calculate percentage based on visible slides only
+        const percent = this.totalVisibleSlides > 0 ? 
+            ((visibleIndex + 1) / this.totalVisibleSlides) * 100 : 0;
+        
+        // Update the donut progress
+        this.updateProgress(percent);
+    }
+    
+    /**
+     * Set up event listeners for dynamic slide changes
+     * @private
+     */
+    _setupEventListeners() {
+        // Listen for slide list updates
+        this.formChippy.on('slidesListUpdated', () => {
+            this._updateVisibleSlides();
+            this.updateProgressFromCurrentSlide();
+        });
+        
+        // Listen for slide navigation
+        this.formChippy.on('slideChanged', (data) => {
+            this.updateProgressFromCurrentSlide();
+        });
+    }
+    
+    /**
+     * Set up mutation observer to detect slide visibility changes
+     * This is important for handling slide groups that may be shown/hidden
+     * @private
+     */
+    _setupMutationObserver() {
+        // Create a mutation observer to watch for class changes on slide groups
+        this.observer = new MutationObserver((mutations) => {
+            let needsUpdate = false;
+            
+            for (const mutation of mutations) {
+                // Check if the mutation is a class change
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const target = mutation.target;
+                    
+                    // Check if the target is a slide group
+                    if (target.hasAttribute('data-fc-slide-group')) {
+                        needsUpdate = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (needsUpdate) {
+                this._updateVisibleSlides();
+                this.updateProgressFromCurrentSlide();
+            }
+        });
+        
+        // Observe the slide list for class changes
+        this.observer.observe(this.formChippy.slideList, {
+            attributes: true,
+            attributeFilter: ['class'],
+            subtree: true
+        });
+    }
+    
+    /**
+     * Update the list of visible slides
+     * This accounts for slide groups that may be hidden
+     * @private
+     */
+    _updateVisibleSlides() {
+        // Start with all slides
+        const allSlides = Array.from(this.formChippy.slides);
+        const visibleSlides = [];
+        
+        // Check each slide to see if it's visible (not in a hidden slide group)
+        for (const slide of allSlides) {
+            // Check if the slide is in a slide group
+            const slideGroup = slide.closest('[data-fc-slide-group]');
+            
+            // If not in a group or the group is visible, add to visible slides
+            if (!slideGroup || !slideGroup.classList.contains('hide')) {
+                visibleSlides.push(slide);
+            }
+        }
+        
+        this.visibleSlides = visibleSlides;
+        this.totalVisibleSlides = visibleSlides.length;
+        
+        this.formChippy.debug.info(`Visible slides updated: ${this.totalVisibleSlides} slides visible`);
+    }
+    
+    /**
+     * Clean up when destroying the form
+     */
+    destroy() {
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+        }
+        
+        // Remove event listeners
+        this.formChippy.off('slidesListUpdated');
+        this.formChippy.off('slideChanged');
+        
+        this.initialized = false;
     }
 }

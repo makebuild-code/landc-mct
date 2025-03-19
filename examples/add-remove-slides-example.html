@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>FormChippy - Add/Remove Slides Example</title>
+        <link rel="stylesheet" href="../dist/css/formchippy.css" />
+        <style>
+            body {
+                font-family: system-ui, -apple-system, BlinkMacSystemFont,
+                    'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
+                    'Helvetica Neue', sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+
+            h1,
+            h2,
+            h3 {
+                color: #2c3e50;
+            }
+
+            .form-container {
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+                position: relative;
+            }
+
+            .fc-slide {
+                padding: 20px;
+                border-radius: 8px;
+                background-color: #f9f9f9;
+                margin-bottom: 10px;
+            }
+
+            .fc-slide h3 {
+                margin-top: 0;
+            }
+
+            .button-group {
+                margin: 20px 0;
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            button {
+                padding: 8px 16px;
+                background-color: #4a90e2;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+
+            button:hover {
+                background-color: #357ab8;
+            }
+
+            button.secondary {
+                background-color: #95a5a6;
+            }
+
+            button.secondary:hover {
+                background-color: #7f8c8d;
+            }
+
+            button.danger {
+                background-color: #e74c3c;
+            }
+
+            button.danger:hover {
+                background-color: #c0392b;
+            }
+
+            button.success {
+                background-color: #2ecc71;
+            }
+
+            button.success:hover {
+                background-color: #27ae60;
+            }
+
+            .donut-container {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                width: 80px;
+                height: 80px;
+            }
+
+            .control-panel {
+                background-color: #f5f5f5;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .control-panel h3 {
+                margin-top: 0;
+            }
+
+            .slide-management {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .slide-management-row {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .slide-management-row select {
+                padding: 8px;
+                border-radius: 4px;
+                border: 1px solid #ddd;
+                flex-grow: 1;
+            }
+
+            .status-panel {
+                background-color: #f8f9fa;
+                border-radius: 8px;
+                padding: 15px;
+                margin-top: 20px;
+                border: 1px solid #e0e0e0;
+            }
+
+            .status-panel pre {
+                background-color: #f1f1f1;
+                padding: 10px;
+                border-radius: 4px;
+                overflow-x: auto;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+
+            .log-controls {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .log-level {
+                display: inline-block;
+                padding: 3px 8px;
+                border-radius: 3px;
+                font-size: 12px;
+                font-weight: bold;
+                margin-right: 5px;
+            }
+
+            .log-level.info {
+                background-color: #e3f2fd;
+                color: #0d47a1;
+            }
+
+            .log-level.success {
+                background-color: #e8f5e9;
+                color: #1b5e20;
+            }
+
+            .log-level.warning {
+                background-color: #fff3e0;
+                color: #e65100;
+            }
+
+            .log-level.error {
+                background-color: #ffebee;
+                color: #b71c1c;
+            }
+
+            .log-level.debug {
+                background-color: #f3e5f5;
+                color: #4a148c;
+            }
+
+            .slide-template-select {
+                margin-bottom: 10px;
+            }
+
+            .slide-counter {
+                background-color: #e0e0e0;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-weight: bold;
+                margin-bottom: 10px;
+                display: inline-block;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>FormChippy - Add/Remove Slides Example</h1>
+        <p>
+            This example demonstrates how to dynamically add and remove slides
+            in FormChippy.
+        </p>
+
+        <!-- Slide Templates (hidden) -->
+        <div style="display: none">
+            <!-- Text Input Slide Template -->
+            <div data-fc-template="text">
+                <div data-fc-slide="template-text">
+                    <h3>Text Input Question</h3>
+                    <div>
+                        <label for="template-text-input">Your answer:</label>
+                        <input
+                            type="text"
+                            id="template-text-input"
+                            data-fc-input
+                        />
+                    </div>
+                    <div class="button-group">
+                        <button data-fc-button="prev">Back</button>
+                        <button data-fc-button="next">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radio Input Slide Template -->
+            <div data-fc-template="radio">
+                <div data-fc-slide="template-radio">
+                    <h3>Multiple Choice Question</h3>
+                    <div>
+                        <fieldset>
+                            <legend>Select an option:</legend>
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="template-radio-option1"
+                                    name="template-radio-options"
+                                    value="option1"
+                                    data-fc-input
+                                />
+                                <label for="template-radio-option1"
+                                    >Option 1</label
+                                >
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="template-radio-option2"
+                                    name="template-radio-options"
+                                    value="option2"
+                                    data-fc-input
+                                />
+                                <label for="template-radio-option2"
+                                    >Option 2</label
+                                >
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="template-radio-option3"
+                                    name="template-radio-options"
+                                    value="option3"
+                                    data-fc-input
+                                />
+                                <label for="template-radio-option3"
+                                    >Option 3</label
+                                >
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="button-group">
+                        <button data-fc-button="prev">Back</button>
+                        <button data-fc-button="next">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Textarea Slide Template -->
+            <div data-fc-template="textarea">
+                <div data-fc-slide="template-textarea">
+                    <h3>Long Answer Question</h3>
+                    <div>
+                        <label for="template-textarea-input"
+                            >Your detailed answer:</label
+                        >
+                        <textarea
+                            id="template-textarea-input"
+                            rows="4"
+                            data-fc-input
+                        ></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button data-fc-button="prev">Back</button>
+                        <button data-fc-button="next">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h3>Slide Management</h3>
+            <div class="slide-counter">
+                Total slides: <span id="total-slides-count">5</span>
+            </div>
+
+            <div class="slide-management">
+                <div class="slide-management-row">
+                    <h4>Add Slide:</h4>
+                </div>
+
+                <div class="slide-management-row">
+                    <select id="slide-template" class="slide-template-select">
+                        <option value="text">Text Input Slide</option>
+                        <option value="radio">Radio Input Slide</option>
+                        <option value="textarea">Textarea Slide</option>
+                    </select>
+
+                    <select id="add-position">
+                        <option value="start">At Start</option>
+                        <option value="before-current">
+                            Before Current Slide
+                        </option>
+                        <option value="after-current" selected>
+                            After Current Slide
+                        </option>
+                        <option value="end">At End</option>
+                    </select>
+
+                    <button id="add-slide" class="success">Add Slide</button>
+                </div>
+
+                <div class="slide-management-row">
+                    <h4>Remove Slide:</h4>
+                </div>
+
+                <div class="slide-management-row">
+                    <select id="remove-position">
+                        <option value="current">Current Slide</option>
+                        <option value="first">First Slide</option>
+                        <option value="last">Last Slide</option>
+                        <option value="custom">Specific Position</option>
+                    </select>
+
+                    <input
+                        type="number"
+                        id="remove-index"
+                        min="1"
+                        value="1"
+                        style="
+                            display: none;
+                            padding: 8px;
+                            border-radius: 4px;
+                            border: 1px solid #ddd;
+                            width: 80px;
+                        "
+                    />
+
+                    <button id="remove-slide" class="danger">
+                        Remove Slide
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <div
+                class="donut-container"
+                data-fc-donut-container
+                data-fc-donut-size="80"
+                data-fc-donut-stroke-width="8"
+                data-fc-donut-track-color="#f0f0f0"
+                data-fc-donut-progress-color="#4a90e2"
+                data-fc-donut-text-color="#333333"
+            ></div>
+
+            <div data-fc-container="dynamic-form" data-fc-log="true">
+                <div data-fc-progress></div>
+
+                <div data-fc-slide-list>
+                    <div data-fc-slide="intro">
+                        <h3>Welcome to the Dynamic Form</h3>
+                        <p>
+                            This form demonstrates how to add and remove slides
+                            dynamically. Use the controls above to modify the
+                            form structure.
+                        </p>
+                        <button data-fc-button="next">Start</button>
+                    </div>
+
+                    <div data-fc-slide="name">
+                        <h3>What's your name?</h3>
+                        <div>
+                            <label for="name">Full Name:</label>
+                            <input
+                                type="text"
+                                id="name"
+                                data-fc-input
+                                required
+                            />
+                        </div>
+                        <div class="button-group">
+                            <button data-fc-button="prev">Back</button>
+                            <button data-fc-button="next">Next</button>
+                        </div>
+                    </div>
+
+                    <div data-fc-slide="email">
+                        <h3>What's your email?</h3>
+                        <div>
+                            <label for="email">Email Address:</label>
+                            <input
+                                type="email"
+                                id="email"
+                                data-fc-input
+                                required
+                            />
+                        </div>
+                        <div class="button-group">
+                            <button data-fc-button="prev">Back</button>
+                            <button data-fc-button="next">Next</button>
+                        </div>
+                    </div>
+
+                    <div data-fc-slide="age">
+                        <h3>What's your age?</h3>
+                        <div>
+                            <label for="age">Age:</label>
+                            <input
+                                type="number"
+                                id="age"
+                                data-fc-input
+                                required
+                            />
+                        </div>
+                        <div class="button-group">
+                            <button data-fc-button="prev">Back</button>
+                            <button data-fc-button="next">Next</button>
+                        </div>
+                    </div>
+
+                    <div data-fc-slide="completion">
+                        <h3>Thank You!</h3>
+                        <p>Your form has been submitted successfully.</p>
+                        <button data-fc-button="reset">Start Over</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <h3>Status</h3>
+            <div class="log-controls">
+                <button id="clear-logs" class="secondary">Clear Logs</button>
+                <label>
+                    <input type="checkbox" id="show-debug" checked />
+                    Show Debug Logs
+                </label>
+                <label>
+                    <input type="checkbox" id="show-info" checked />
+                    Show Info Logs
+                </label>
+                <label>
+                    <input type="checkbox" id="show-success" checked />
+                    Show Success Logs
+                </label>
+                <label>
+                    <input type="checkbox" id="show-warning" checked />
+                    Show Warning Logs
+                </label>
+                <label>
+                    <input type="checkbox" id="show-error" checked />
+                    Show Error Logs
+                </label>
+            </div>
+            <div id="status-output">
+                <pre id="status-text"></pre>
+            </div>
+        </div>
+
+        <script type="module" src="../dist/formchippy.js"></script>
+        <script>
+            
+            // Log when script is loaded
+            console.log(
+                '[INIT] Script loaded - ' + new Date().toLocaleTimeString()
+            )
+
+            // Wait for DOM to be fully loaded
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log(
+                    '[INIT] DOM fully loaded - ' +
+                        new Date().toLocaleTimeString()
+                )
+
+                try {
+                    // Enhanced status update function with console logging and log levels
+                    function updateStatus(
+                        message,
+                        level = 'info',
+                        data = null
+                    ) {
+                        const statusText =
+                            document.getElementById('status-text')
+                        const timestamp = new Date().toLocaleTimeString()
+                        statusText.textContent =
+                            `[${timestamp}] ${message}\n` +
+                            statusText.textContent
+
+                        // Also log to console with appropriate log level
+                        if (level === 'error') {
+                            console.error(
+                                `[${timestamp}][ERROR] ${message}`,
+                                data || ''
+                            )
+                        } else if (level === 'warning') {
+                            console.warn(
+                                `[${timestamp}][WARNING] ${message}`,
+                                data || ''
+                            )
+                        } else if (level === 'success') {
+                            console.log(
+                                `[${timestamp}][SUCCESS] ${message}`,
+                                data || ''
+                            )
+                        } else if (level === 'debug') {
+                            console.debug(
+                                `[${timestamp}][DEBUG] ${message}`,
+                                data || ''
+                            )
+                        } else {
+                            console.log(
+                                `[${timestamp}][INFO] ${message}`,
+                                data || ''
+                            )
+                        }
+                    }
+
+                    // Make updateStatus available globally
+                    window.updateStatus = updateStatus
+
+                    // Generate a unique ID for slides
+                    function generateId() {
+                        return (
+                            'slide-' +
+                            Date.now() +
+                            '-' +
+                            Math.floor(Math.random() * 1000)
+                        )
+                    }
+
+                    // Update slide count display
+                    function updateSlideCount() {
+                        const count = form.getTotalSlides()
+                        document.getElementById(
+                            'total-slides-count'
+                        ).textContent = count
+                        console.log(`[SLIDES] Updated slide count: ${count}`)
+                    }
+
+                    // Log initialization start
+                    updateStatus('Starting FormChippy initialization', 'info')
+                    console.time('FormChippyInitialization')
+
+                    // Manually initialize FormChippy
+                    // Let FormChippy auto-initialize based on data attributes
+                    // The module version auto-initializes and we don't need to manually create an instance
+                    // Just log that initialization is complete
+                    updateStatus('FormChippy auto-initialization complete', 'info')
+
+                    console.timeEnd('FormChippyInitialization')
+                    console.log('[INIT] FormChippy initialized:', {
+                        totalSlides: form.getTotalSlides(),
+                        currentSlide: form.getCurrentSlideIndex() + 1,
+                        containerElement: form.container,
+                        slideListElement: form.slideList,
+                    })
+
+                    // Initial status update
+                    updateStatus(
+                        `Form initialized with ${form.getTotalSlides()} slides`,
+                        'success',
+                        {
+                            totalSlides: form.getTotalSlides(),
+                            currentSlide: form.getCurrentSlideIndex() + 1,
+                        }
+                    )
+
+                    // Initialize slide count
+                    updateSlideCount()
+
+                    // Get slide templates by cloning from the DOM
+                    function getSlideTemplate(type) {
+                        // Find the template element
+                        const templateContainer = document.querySelector(
+                            `[data-fc-template="${type}"]`
+                        )
+                        if (!templateContainer) {
+                            updateStatus(
+                                `Template type '${type}' not found, using text template instead`
+                            )
+                            return getSlideTemplate('text')
+                        }
+
+                        // Clone the template
+                        const clone = templateContainer.cloneNode(true)
+
+                        // Generate a unique ID for this slide
+                        const slideId = generateId()
+
+                        // Update the slide's data-fc-slide attribute with the unique ID
+                        const slideElement =
+                            clone.querySelector('[data-fc-slide]')
+                        slideElement.setAttribute('data-fc-slide', slideId)
+
+                        // Update all IDs and for/name attributes to make them unique
+                        const elementsWithId = clone.querySelectorAll('[id]')
+                        elementsWithId.forEach((element) => {
+                            const oldId = element.getAttribute('id')
+                            const newId = `${slideId}-${oldId.replace(
+                                /^template-[^-]+-/,
+                                ''
+                            )}`
+                            element.setAttribute('id', newId)
+
+                            // Update associated labels
+                            const associatedLabel = clone.querySelector(
+                                `label[for="${oldId}"]`
+                            )
+                            if (associatedLabel) {
+                                associatedLabel.setAttribute('for', newId)
+                            }
+                        })
+
+                        // Update name attributes for radio buttons to make them unique
+                        const radioButtons = clone.querySelectorAll(
+                            'input[type="radio"]'
+                        )
+                        radioButtons.forEach((radio) => {
+                            if (radio.hasAttribute('name')) {
+                                const oldName = radio.getAttribute('name')
+                                radio.setAttribute(
+                                    'name',
+                                    `${slideId}-${oldName.replace(
+                                        /^template-[^-]+-/,
+                                        ''
+                                    )}`
+                                )
+                            }
+                        })
+
+                        // Return the HTML content of the clone
+                        return clone.innerHTML
+                    }
+
+                    // Add slide event listener
+                    document
+                        .getElementById('add-slide')
+                        .addEventListener('click', function () {
+                            const templateType =
+                                document.getElementById('slide-template').value
+                            const position =
+                                document.getElementById('add-position').value
+                            const slideHtml = getSlideTemplate(templateType)
+
+                            let positionIndex
+                            switch (position) {
+                                case 'start':
+                                    positionIndex = 0
+                                    break
+                                case 'before-current':
+                                    positionIndex = form.getCurrentSlideIndex()
+                                    break
+                                case 'after-current':
+                                    positionIndex =
+                                        form.getCurrentSlideIndex() + 1
+                                    break
+                                case 'end':
+                                default:
+                                    positionIndex = form.getTotalSlides() - 1 // Before completion slide
+                                    break
+                            }
+
+                            console.log('Adding new slide:', {
+                                type: templateType,
+                                position: positionIndex,
+                                totalSlidesBefore: form.getTotalSlides(),
+                            })
+
+                            // Add the slide at the specified position
+                            const newSlide = form.addSlide(slideHtml, {
+                                position: positionIndex,
+                                navigateToNew: true,
+                            })
+
+                            console.log('Slide added successfully:', {
+                                newSlide,
+                                totalSlidesAfter: form.getTotalSlides(),
+                                currentIndex: form.getCurrentSlideIndex(),
+                            })
+
+                            updateStatus(
+                                `Added new ${templateType} slide at position ${
+                                    positionIndex + 1
+                                }`
+                            )
+                            updateSlideCount()
+                        })
+
+                    // Toggle custom index input visibility
+                    document
+                        .getElementById('remove-position')
+                        .addEventListener('change', function () {
+                            const removeIndex =
+                                document.getElementById('remove-index')
+                            if (this.value === 'custom') {
+                                removeIndex.style.display = 'block'
+                            } else {
+                                removeIndex.style.display = 'none'
+                            }
+                        })
+
+                    // Remove slide event listener
+                    document
+                        .getElementById('remove-slide')
+                        .addEventListener('click', function () {
+                            const position =
+                                document.getElementById('remove-position').value
+                            const totalSlides = form.getTotalSlides()
+
+                            if (totalSlides <= 2) {
+                                updateStatus(
+                                    'Cannot remove more slides. Minimum 2 slides required.'
+                                )
+                                return
+                            }
+
+                            let slideIndex
+                            switch (position) {
+                                case 'first':
+                                    slideIndex = 0
+                                    break
+                                case 'last':
+                                    slideIndex = totalSlides - 1
+                                    break
+                                case 'current':
+                                    slideIndex = form.getCurrentSlideIndex()
+                                    break
+                                case 'custom':
+                                    const customIndex =
+                                        parseInt(
+                                            document.getElementById(
+                                                'remove-index'
+                                            ).value
+                                        ) - 1
+                                    if (
+                                        customIndex < 0 ||
+                                        customIndex >= totalSlides
+                                    ) {
+                                        updateStatus(
+                                            `Invalid slide index. Must be between 1 and ${totalSlides}.`
+                                        )
+                                        return
+                                    }
+                                    slideIndex = customIndex
+                                    break
+                            }
+
+                            console.log('Attempting to remove slide:', {
+                                position,
+                                slideIndex,
+                                totalSlidesBefore: totalSlides,
+                                currentSlide: form.getCurrentSlideIndex(),
+                                slideData: form.slides[slideIndex]
+                                    ? {
+                                          id: form.slides[
+                                              slideIndex
+                                          ].getAttribute('data-fc-slide'),
+                                          content:
+                                              form.slides[
+                                                  slideIndex
+                                              ].innerHTML.substring(0, 50) +
+                                              '...', // First 50 chars
+                                      }
+                                    : 'No slide data',
+                            })
+
+                            // Don't remove the completion slide if it's the last one
+                            if (
+                                slideIndex === totalSlides - 1 &&
+                                form.slides[slideIndex].getAttribute(
+                                    'data-fc-slide'
+                                ) === 'completion'
+                            ) {
+                                console.warn('Cannot remove completion slide')
+                                updateStatus(
+                                    'Cannot remove the completion slide.'
+                                )
+                                return
+                            }
+
+                            const removed = form.removeSlide(slideIndex)
+
+                            if (removed) {
+                                console.log('Slide removed successfully:', {
+                                    slideIndex,
+                                    totalSlidesAfter: form.getTotalSlides(),
+                                    currentSlideAfter:
+                                        form.getCurrentSlideIndex(),
+                                })
+                                updateStatus(
+                                    `Removed slide at position ${
+                                        slideIndex + 1
+                                    }`
+                                )
+                                updateSlideCount()
+                            } else {
+                                console.error('Failed to remove slide:', {
+                                    slideIndex,
+                                    totalSlides: form.getTotalSlides(),
+                                })
+                                updateStatus('Failed to remove slide')
+                            }
+                        })
+
+                    // Listen for slide changes
+                    form.on('slideChanged', function (data) {
+                        console.log('Slide changed:', {
+                            currentSlide: data.currentSlideIndex + 1,
+                            totalSlides: data.totalSlides,
+                            slideId:
+                                form.slides[
+                                    data.currentSlideIndex
+                                ].getAttribute('data-fc-slide'),
+                            direction: data.direction || 'unknown',
+                        })
+
+                        updateStatus(
+                            `Navigated to slide ${
+                                data.currentSlideIndex + 1
+                            } of ${data.totalSlides}`
+                        )
+                    })
+
+                    // Listen for slides list updates
+                    form.on('slidesListUpdated', function (data) {
+                        updateStatus(
+                            `Slides list updated: ${
+                                data.totalSlides
+                            } total slides, currently on slide ${
+                                data.currentIndex + 1
+                            }`
+                        )
+                    })
+
+                    // Initialize slide count
+                    updateSlideCount()
+                } catch (error) {
+                    console.error(
+                        '[ERROR] Error initializing FormChippy:',
+                        error
+                    )
+                    updateStatus(
+                        'Error initializing FormChippy: ' + error.message,
+                        'error',
+                        error
+                    )
+                }
+            })
+        </script>
+    </body>
+</html>
