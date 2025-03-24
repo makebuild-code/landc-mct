@@ -1,13 +1,14 @@
 /**
- * FormChippy.js v1.3.1
+ * FormChippy.js v1.4.0
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
  *
- * New in v1.3.1:
- * - Enhanced logging system with detailed timestamp and log levels
- * - Fixed initialization issues in examples
- * - Improved error handling and debugging capabilities
- *
+ * New in v1.4.0:
+ * - Support for slides at any nesting level within the slide-list element
+ * - Automatic filtering of slides with hidden ancestors (display:none)
+ * - Improved slide detection regardless of DOM structure depth
+ * - Enhanced debug information showing excluded slides and their status
+ * 
  * New in v1.3.0:
  * - Progress fraction indicator ("Step X of Y") integrated in core library
  * - Donut progress indicator for circular visualizations
@@ -203,12 +204,22 @@ class FormChippy {
             }
         }
 
-        // Get all slides within the slide list, including those within slide groups
-        // This ensures we can navigate between slides in different groups
-        this.slides = Array.from(
+        // Get all slides within the slide list, including those at any depth
+        // This ensures we can navigate between slides regardless of their nesting level
+        const allSlides = Array.from(
             this.slideList.querySelectorAll(this.options.slideSelector)
         )
+        
+        // Filter out slides that are inside hidden containers (display: none)
+        this.slides = allSlides.filter(slide => !this._hasHiddenAncestor(slide))
         this.totalSlides = this.slides.length
+        
+        // Log any filtered slides for debugging
+        if (allSlides.length !== this.slides.length) {
+            console.info(
+                `FormChippy: Filtered out ${allSlides.length - this.slides.length} slides with hidden ancestors`
+            )
+        }
         
         // Store the parent structure for each slide to help with navigation
         this.slideParents = new Map()
@@ -362,6 +373,30 @@ class FormChippy {
         if (!this.isAnimating) {
             this.goToSlide(this.currentSlideIndex, false)
         }
+    }
+
+    /**
+     * Check if an element or any of its ancestors has display:none
+     * @param {HTMLElement} element - Element to check
+     * @returns {boolean} - True if element or any ancestor has display:none
+     * @private
+     */
+    _hasHiddenAncestor(element) {
+        let current = element;
+        
+        // Check the element and all its ancestors up to the slide-list
+        while (current && !current.hasAttribute('data-fc-slide-list')) {
+            // Get computed style to check display property
+            const style = window.getComputedStyle(current);
+            
+            if (style.display === 'none') {
+                return true;
+            }
+            
+            current = current.parentElement;
+        }
+        
+        return false;
     }
 
     /**

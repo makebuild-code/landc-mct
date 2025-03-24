@@ -85,19 +85,19 @@
             }
 
             /* Add visual indicator of nesting level */
-            [data-fc-slide][data-nesting="0"] {
+            [data-fc-slide][data-nesting='0'] {
                 border-top: 5px solid #9b59b6;
             }
 
-            [data-fc-slide][data-nesting="1"] {
+            [data-fc-slide][data-nesting='1'] {
                 border-top: 5px solid #3498db;
             }
 
-            [data-fc-slide][data-nesting="2"] {
+            [data-fc-slide][data-nesting='2'] {
                 border-top: 5px solid #e74c3c;
             }
 
-            [data-fc-slide][data-nesting="3"] {
+            [data-fc-slide][data-nesting='3'] {
                 border-top: 5px solid #2ecc71;
             }
 
@@ -143,11 +143,11 @@
                 background-color: #2980b9;
             }
 
-            button[data-fc-button="reset"] {
+            button[data-fc-button='reset'] {
                 background-color: #e74c3c;
             }
 
-            button[data-fc-button="reset"]:hover {
+            button[data-fc-button='reset']:hover {
                 background-color: #c0392b;
             }
 
@@ -161,10 +161,18 @@
                 color: white;
             }
 
-            .nesting-0 { background-color: #9b59b6; }
-            .nesting-1 { background-color: #3498db; }
-            .nesting-2 { background-color: #e74c3c; }
-            .nesting-3 { background-color: #2ecc71; }
+            .nesting-0 {
+                background-color: #9b59b6;
+            }
+            .nesting-1 {
+                background-color: #3498db;
+            }
+            .nesting-2 {
+                background-color: #e74c3c;
+            }
+            .nesting-3 {
+                background-color: #2ecc71;
+            }
         </style>
     </head>
     <body>
@@ -192,9 +200,20 @@
                     <!-- Direct child slide (Level 0) -->
                     <div data-fc-slide="intro" data-nesting="0">
                         <div data-fc-content>
-                            <h2>Welcome <span class="nesting-info nesting-0">Direct Child</span></h2>
-                            <p>This slide is a direct child of the slide-list element.</p>
-                            <p>We'll demonstrate FormChippy's ability to handle slides at various nesting levels.</p>
+                            <h2>
+                                Welcome
+                                <span class="nesting-info nesting-0"
+                                    >Direct Child</span
+                                >
+                            </h2>
+                            <p>
+                                This slide is a direct child of the slide-list
+                                element.
+                            </p>
+                            <p>
+                                We'll demonstrate FormChippy's ability to handle
+                                slides at various nesting levels.
+                            </p>
                         </div>
                     </div>
 
@@ -203,9 +222,20 @@
                         <!-- Nested slide (Level 1) -->
                         <div data-fc-slide="nested-1" data-nesting="1">
                             <div data-fc-content>
-                                <h2>First Nested Level <span class="nesting-info nesting-1">Level 1</span></h2>
-                                <p>This slide is inside a wrapper div, one level deep.</p>
-                                <p>FormChippy can find and navigate to slides regardless of their DOM position.</p>
+                                <h2>
+                                    First Nested Level
+                                    <span class="nesting-info nesting-1"
+                                        >Level 1</span
+                                    >
+                                </h2>
+                                <p>
+                                    This slide is inside a wrapper div, one
+                                    level deep.
+                                </p>
+                                <p>
+                                    FormChippy can find and navigate to slides
+                                    regardless of their DOM position.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -213,9 +243,20 @@
                     <!-- Another direct child slide (Level 0) -->
                     <div data-fc-slide="middle" data-nesting="0">
                         <div data-fc-content>
-                            <h2>Another Direct Child <span class="nesting-info nesting-0">Direct Child</span></h2>
-                            <p>This slide is also a direct child of the slide-list element.</p>
-                            <p>You can mix and match slides at different nesting levels.</p>
+                            <h2>
+                                Another Direct Child
+                                <span class="nesting-info nesting-0"
+                                    >Direct Child</span
+                                >
+                            </h2>
+                            <p>
+                                This slide is also a direct child of the
+                                slide-list element.
+                            </p>
+                            <p>
+                                You can mix and match slides at different
+                                nesting levels.
+                            </p>
                         </div>
                     </div>
 
@@ -225,9 +266,20 @@
                             <!-- Double nested slide (Level 2) -->
                             <div data-fc-slide="nested-2" data-nesting="2">
                                 <div data-fc-content>
-                                    <h2>Second Nested Level <span class="nesting-info nesting-2">Level 2</span></h2>
-                                    <p>This slide is nested two levels deep inside wrapper divs.</p>
-                                    <p>FormChippy will still find it and include it in the navigation flow.</p>
+                                    <h2>
+                                        Second Nested Level
+                                        <span class="nesting-info nesting-2"
+                                            >Level 2</span
+                                        >
+                                    </h2>
+                                    <p>
+                                        This slide is nested two levels deep
+                                        inside wrapper divs.
+                                    </p>
+                                    <p>
+                                        FormChippy will still find it and
+                                        include it in the navigation flow.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -240,9 +292,20 @@
                                 <!-- Triple nested slide (Level 3) -->
                                 <div data-fc-slide="nested-3" data-nesting="3">
                                     <div data-fc-content>
-                                        <h2>Deep Nesting <span class="nesting-info nesting-3">Level 3</span></h2>
-                                        <p>This slide is buried three levels deep!</p>
-                                        <p>FormChippy handles deeply nested slides with ease.</p>
+                                        <h2>
+                                            Deep Nesting
+                                            <span class="nesting-info nesting-3"
+                                                >Level 3</span
+                                            >
+                                        </h2>
+                                        <p>
+                                            This slide is buried three levels
+                                            deep!
+                                        </p>
+                                        <p>
+                                            FormChippy handles deeply nested
+                                            slides with ease.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -250,23 +313,35 @@
                     </div>
 
                     <!-- Hidden section with slides that should be excluded -->
-                    <div style="display: none;" class="hidden-section">
+                    <div style="display: none" class="hidden-section">
                         <!-- This slide should be filtered out because it has a hidden ancestor -->
                         <div data-fc-slide="hidden-slide" data-nesting="2">
                             <div data-fc-content>
                                 <h2>Hidden Slide</h2>
-                                <p>This slide has an ancestor with display:none and should be excluded from navigation.</p>
-                                <p>If you see this slide during navigation, something is wrong!</p>
+                                <p>
+                                    This slide has an ancestor with display:none
+                                    and should be excluded from navigation.
+                                </p>
+                                <p>
+                                    If you see this slide during navigation,
+                                    something is wrong!
+                                </p>
                             </div>
                         </div>
-                        
+
                         <!-- Deeper nested slide inside the hidden section -->
                         <div class="wrapper-level-3">
                             <div data-fc-slide="nested-hidden" data-nesting="3">
                                 <div data-fc-content>
                                     <h2>Nested Hidden Slide</h2>
-                                    <p>This slide is even more deeply nested within the hidden section.</p>
-                                    <p>It should also be excluded from navigation.</p>
+                                    <p>
+                                        This slide is even more deeply nested
+                                        within the hidden section.
+                                    </p>
+                                    <p>
+                                        It should also be excluded from
+                                        navigation.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -275,10 +350,24 @@
                     <!-- Final direct child slide (Level 0) -->
                     <div data-fc-slide="final" data-nesting="0">
                         <div data-fc-content>
-                            <h2>Conclusion <span class="nesting-info nesting-0">Direct Child</span></h2>
-                            <p>This final slide demonstrates that FormChippy smoothly navigates between slides at any level.</p>
-                            <p>The navigation and active state management works regardless of the DOM hierarchy.</p>
-                            <p>Slides with hidden ancestors (display:none) are automatically excluded from navigation.</p>
+                            <h2>
+                                Conclusion
+                                <span class="nesting-info nesting-0"
+                                    >Direct Child</span
+                                >
+                            </h2>
+                            <p>
+                                This final slide demonstrates that FormChippy
+                                smoothly navigates between slides at any level.
+                            </p>
+                            <p>
+                                The navigation and active state management works
+                                regardless of the DOM hierarchy.
+                            </p>
+                            <p>
+                                Slides with hidden ancestors (display:none) are
+                                automatically excluded from navigation.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -287,7 +376,15 @@
             <!-- End of container -->
 
             <!-- Debug information -->
-            <div class="current-slide-info" style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+            <div
+                class="current-slide-info"
+                style="
+                    margin-top: 30px;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-radius: 5px;
+                "
+            >
                 <h3>Debug Information</h3>
                 <div id="slideInfo"></div>
             </div>
@@ -296,42 +393,45 @@
         <!-- FormChippy Script -->
         <script type="module" src="../dist/formchippy.js"></script>
 
-        <!-- Debug script to show current slide info and hidden slides -->        
+        <!-- Debug script to show current slide info and hidden slides -->
         <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                // Give FormChippy time to initialize
-                setTimeout(() => {
-                    // Get the FormChippy instance
-                    const formchippy = window.FormChippy.getInstance('nested-demo');
+            // Listen for the global FormChippy init event
+            document.addEventListener('formchippy:init', function(event) {
+                // The FormChippy instance is available in the event detail
+                const formchippy = event.detail.instance;
+
+                // Check if this is the instance we want (in case there are multiple forms)
+                if (formchippy.formName === 'nested-demo') {
+                    console.log('FormChippy initialized successfully!');
                     const slideInfoEl = document.getElementById('slideInfo');
-                    
+
                     // Function to update slide info display
                     function updateSlideInfo() {
                         if (!formchippy) return;
-                        
+
                         const currentIndex = formchippy.getCurrentSlide();
                         const totalSlides = formchippy.getTotalSlides();
                         const currentSlide = formchippy.slides[currentIndex];
-                        
+
                         // Get all slides (including hidden ones) for comparison
                         const allSlides = Array.from(
                             document.querySelectorAll('[data-fc-slide]')
                         );
-                        
+
                         // Determine which slides were excluded
-                        const includedSlideIds = formchippy.slides.map(slide => 
+                        const includedSlideIds = formchippy.slides.map(slide =>
                             slide.getAttribute('data-fc-slide')
                         );
-                        
-                        const hiddenSlides = allSlides.filter(slide => 
+
+                        const hiddenSlides = allSlides.filter(slide =>
                             !includedSlideIds.includes(slide.getAttribute('data-fc-slide'))
                         );
-                        
+
                         if (currentSlide) {
                             const nestingLevel = currentSlide.getAttribute('data-nesting');
                             const slideId = currentSlide.getAttribute('data-fc-slide');
                             const parentPath = getParentPath(currentSlide);
-                            
+
                             let hiddenSlidesHtml = '';
                             if (hiddenSlides.length > 0) {
                                 hiddenSlidesHtml = `
@@ -339,7 +439,7 @@
                                     <ul>
                                         ${hiddenSlides.map(slide => `
                                             <li>
-                                                <strong>${slide.getAttribute('data-fc-slide')}</strong> 
+                                                <strong>${slide.getAttribute('data-fc-slide')}</strong>
                                                 (Nesting: ${slide.getAttribute('data-nesting') || 'N/A'})
                                                 - ${isElementHidden(slide) ? 'Direct display:none' : 'Hidden ancestor'}
                                             </li>
@@ -347,7 +447,7 @@
                                     </ul>
                                 `;
                             }
-                            
+
                             slideInfoEl.innerHTML = `
                                 <p><strong>Current Slide:</strong> ${currentIndex + 1} of ${totalSlides}</p>
                                 <p><strong>Total Slides in DOM:</strong> ${allSlides.length}</p>
@@ -360,17 +460,17 @@
                             `;
                         }
                     }
-                    
+
                     // Helper to check if element itself has display:none
                     function isElementHidden(element) {
                         return window.getComputedStyle(element).display === 'none';
                     }
-                    
+
                     // Helper to build parent element path
                     function getParentPath(element) {
                         let path = [];
                         let current = element;
-                        
+
                         // Go up to slide-list
                         while (current && !current.hasAttribute('data-fc-slide-list')) {
                             const tagName = current.tagName.toLowerCase();
@@ -378,19 +478,18 @@
                             path.unshift(classes ? `${tagName}.${classes}` : tagName);
                             current = current.parentElement;
                         }
-                        
+
                         return path.join(' > ');
                     }
-                    
+
                     // Initial update
                     updateSlideInfo();
-                    
+
                     // Listen for slide changes
                     formchippy.on('slideChange', () => {
                         updateSlideInfo();
                     });
-                    
-                }, 500);
+                }
             });
         </script>
     </body>

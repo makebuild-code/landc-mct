@@ -1,33 +1,16 @@
 /**
- * DynamicSlides.js - Part of FormChippy v1.3.1
- * ==================================================
+ * DynamicSlides.js
  * Extends FormChippy with the ability to dynamically add and remove slides
- * while updating progress indicators, navigation, and other components seamlessly.
+ * while updating progress indicators, navigation, and other components seamlessly
  * 
  * Features:
- * - Add new slides to the slide list at any position during runtime
- * - Remove slides from the slide list without breaking navigation
- * - Automatically update progress indicators (both linear and donut)
- * - Update navigation controls and slide counters
- * - Works with slide groups for multi-section forms
- * - Preserves form data during slide manipulations
- * 
- * Usage Example:
- * ```javascript
- * // Add a new slide after the current one
- * formChippy.addSlide({
- *   id: 'new-slide-1',
- *   content: '<div data-fc-content><h2>New Slide</h2></div>',
- *   position: 'after',
- *   targetSlide: formChippy.getCurrentSlideIndex(),
- *   updateNavigation: true
- * });
- * ```
+ * - Add new slides to the slide list at any position
+ * - Remove slides from the slide list
+ * - Automatically update progress indicators (linear and donut)
+ * - Update navigation and slide counters
+ * - Works with slide groups
  * 
  * @author JP Dionisio
- * @since v1.3.0
- * @module core/dynamic-slides
- * @license MIT
  */
 
 export class DynamicSlides {

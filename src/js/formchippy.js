@@ -4,8 +4,10 @@
  * Created for L&C Mortgage Finder
  *
  * New in v1.4.0:
- * - Support for slides at any nesting level within the slide-list
+ * - Support for slides at any nesting level within the slide-list element
  * - Automatic filtering of slides with hidden ancestors (display:none)
+ * - Improved slide detection regardless of DOM structure depth
+ * - Enhanced debug information showing excluded slides and their status
  * 
  * New in v1.3.0:
  * - Progress fraction indicator ("Step X of Y") integrated in core library
