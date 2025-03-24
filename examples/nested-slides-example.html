@@ -249,12 +249,36 @@
                         </div>
                     </div>
 
+                    <!-- Hidden section with slides that should be excluded -->
+                    <div style="display: none;" class="hidden-section">
+                        <!-- This slide should be filtered out because it has a hidden ancestor -->
+                        <div data-fc-slide="hidden-slide" data-nesting="2">
+                            <div data-fc-content>
+                                <h2>Hidden Slide</h2>
+                                <p>This slide has an ancestor with display:none and should be excluded from navigation.</p>
+                                <p>If you see this slide during navigation, something is wrong!</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Deeper nested slide inside the hidden section -->
+                        <div class="wrapper-level-3">
+                            <div data-fc-slide="nested-hidden" data-nesting="3">
+                                <div data-fc-content>
+                                    <h2>Nested Hidden Slide</h2>
+                                    <p>This slide is even more deeply nested within the hidden section.</p>
+                                    <p>It should also be excluded from navigation.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Final direct child slide (Level 0) -->
                     <div data-fc-slide="final" data-nesting="0">
                         <div data-fc-content>
                             <h2>Conclusion <span class="nesting-info nesting-0">Direct Child</span></h2>
                             <p>This final slide demonstrates that FormChippy smoothly navigates between slides at any level.</p>
                             <p>The navigation and active state management works regardless of the DOM hierarchy.</p>
+                            <p>Slides with hidden ancestors (display:none) are automatically excluded from navigation.</p>
                         </div>
                     </div>
                 </div>
@@ -272,7 +296,7 @@
         <!-- FormChippy Script -->
         <script type="module" src="../dist/formchippy.js"></script>
 
-        <!-- Debug script to show current slide info -->
+        <!-- Debug script to show current slide info and hidden slides -->        
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 // Give FormChippy time to initialize
@@ -289,18 +313,57 @@
                         const totalSlides = formchippy.getTotalSlides();
                         const currentSlide = formchippy.slides[currentIndex];
                         
+                        // Get all slides (including hidden ones) for comparison
+                        const allSlides = Array.from(
+                            document.querySelectorAll('[data-fc-slide]')
+                        );
+                        
+                        // Determine which slides were excluded
+                        const includedSlideIds = formchippy.slides.map(slide => 
+                            slide.getAttribute('data-fc-slide')
+                        );
+                        
+                        const hiddenSlides = allSlides.filter(slide => 
+                            !includedSlideIds.includes(slide.getAttribute('data-fc-slide'))
+                        );
+                        
                         if (currentSlide) {
                             const nestingLevel = currentSlide.getAttribute('data-nesting');
                             const slideId = currentSlide.getAttribute('data-fc-slide');
                             const parentPath = getParentPath(currentSlide);
                             
+                            let hiddenSlidesHtml = '';
+                            if (hiddenSlides.length > 0) {
+                                hiddenSlidesHtml = `
+                                    <h4>Hidden Slides (${hiddenSlides.length}):</h4>
+                                    <ul>
+                                        ${hiddenSlides.map(slide => `
+                                            <li>
+                                                <strong>${slide.getAttribute('data-fc-slide')}</strong> 
+                                                (Nesting: ${slide.getAttribute('data-nesting') || 'N/A'})
+                                                - ${isElementHidden(slide) ? 'Direct display:none' : 'Hidden ancestor'}
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                `;
+                            }
+                            
                             slideInfoEl.innerHTML = `
                                 <p><strong>Current Slide:</strong> ${currentIndex + 1} of ${totalSlides}</p>
-                                <p><strong>Slide ID:</strong> ${slideId}</p>
+                                <p><strong>Total Slides in DOM:</strong> ${allSlides.length}</p>
+                                <p><strong>Slides Included in Navigation:</strong> ${formchippy.slides.length}</p>
+                                <p><strong>Slides Excluded:</strong> ${allSlides.length - formchippy.slides.length}</p>
+                                <p><strong>Current Slide ID:</strong> ${slideId}</p>
                                 <p><strong>Nesting Level:</strong> ${nestingLevel}</p>
                                 <p><strong>DOM Path:</strong> ${parentPath}</p>
+                                ${hiddenSlidesHtml}
                             `;
                         }
+                    }
+                    
+                    // Helper to check if element itself has display:none
+                    function isElementHidden(element) {
+                        return window.getComputedStyle(element).display === 'none';
                     }
                     
                     // Helper to build parent element path
