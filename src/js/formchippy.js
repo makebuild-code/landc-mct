@@ -198,8 +198,8 @@ class FormChippy {
             }
         }
 
-        // Get all slides within the slide list, including those within slide groups
-        // This ensures we can navigate between slides in different groups
+        // Get all slides within the slide list, including those at any depth
+        // This ensures we can navigate between slides regardless of their nesting level
         this.slides = Array.from(
             this.slideList.querySelectorAll(this.options.slideSelector)
         )

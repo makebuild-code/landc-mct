@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>FormChippy Nested Slides Example</title>
+
+        <!-- FormChippy CSS -->
+        <link rel="stylesheet" href="../dist/css/formchippy.css" />
+
+        <!-- If CSS doesn't exist in dist yet, fallback to src -->
+        <script>
+            ;(function () {
+                var link = document.querySelector(
+                    'link[href="../dist/css/formchippy.css"]'
+                )
+                link.addEventListener('error', function () {
+                    console.warn(
+                        'CSS not found in dist, falling back to src version'
+                    )
+                    link.href = '../src/css/formchippy.css'
+                })
+            })()
+        </script>
+
+        <style>
+            /* Basic page styling */
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                    Roboto, Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f7;
+                color: #333;
+            }
+
+            .container {
+                max-width: 800px;
+                margin: 4rem auto;
+                padding: 20px;
+            }
+
+            h1 {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            /* Slide nesting visual indicators */
+            .wrapper-level-1 {
+                border-left: 4px solid #3498db;
+                padding-left: 15px;
+                margin-bottom: 10px;
+            }
+
+            .wrapper-level-2 {
+                border-left: 4px solid #e74c3c;
+                padding-left: 15px;
+                margin-bottom: 10px;
+                margin-left: 10px;
+            }
+
+            .wrapper-level-3 {
+                border-left: 4px solid #2ecc71;
+                padding-left: 15px;
+                margin-bottom: 10px;
+                margin-left: 10px;
+            }
+
+            /* FormChippy slides styling */
+            [data-fc-container] {
+                display: block;
+            }
+
+            [data-fc-slide-list] {
+                position: relative;
+                width: 100%;
+            }
+
+            [data-fc-slide] {
+                background-color: white;
+                padding: 30px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Add visual indicator of nesting level */
+            [data-fc-slide][data-nesting="0"] {
+                border-top: 5px solid #9b59b6;
+            }
+
+            [data-fc-slide][data-nesting="1"] {
+                border-top: 5px solid #3498db;
+            }
+
+            [data-fc-slide][data-nesting="2"] {
+                border-top: 5px solid #e74c3c;
+            }
+
+            [data-fc-slide][data-nesting="3"] {
+                border-top: 5px solid #2ecc71;
+            }
+
+            /* Progress indicator styling */
+            [data-fc-progress] {
+                max-width: none;
+                width: 100%;
+                margin-bottom: 30px;
+            }
+
+            [data-fc-progress-bar] {
+                height: 10px;
+                background-color: #e0e0e0;
+                border-radius: 5px;
+                overflow: hidden;
+            }
+
+            [data-fc-progress-fill] {
+                background-color: #3498db;
+                height: 100%;
+                transition: width 0.3s ease;
+            }
+
+            /* Navigation button styling */
+            .nav-buttons {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 30px;
+            }
+
+            button[data-fc-button] {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 10px 20px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: background-color 0.2s ease;
+            }
+
+            button[data-fc-button]:hover {
+                background-color: #2980b9;
+            }
+
+            button[data-fc-button="reset"] {
+                background-color: #e74c3c;
+            }
+
+            button[data-fc-button="reset"]:hover {
+                background-color: #c0392b;
+            }
+
+            .nesting-info {
+                display: inline-block;
+                margin-left: 10px;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.8rem;
+                font-weight: bold;
+                color: white;
+            }
+
+            .nesting-0 { background-color: #9b59b6; }
+            .nesting-1 { background-color: #3498db; }
+            .nesting-2 { background-color: #e74c3c; }
+            .nesting-3 { background-color: #2ecc71; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>FormChippy Nested Slides Demo</h1>
+
+            <!-- Main form container -->
+            <div data-fc-container="nested-demo">
+                <!-- Progress bar -->
+                <div data-fc-progress>
+                    <div data-fc-progress-bar>
+                        <div data-fc-progress-fill></div>
+                    </div>
+                </div>
+
+                <!-- Navigation buttons -->
+                <div class="nav-buttons">
+                    <button data-fc-button="prev">Previous</button>
+                    <button data-fc-button="next">Next</button>
+                    <button data-fc-button="reset">Reset</button>
+                </div>
+
+                <!-- Main slide list - contains slides at various nesting levels -->
+                <div data-fc-slide-list>
+                    <!-- Direct child slide (Level 0) -->
+                    <div data-fc-slide="intro" data-nesting="0">
+                        <div data-fc-content>
+                            <h2>Welcome <span class="nesting-info nesting-0">Direct Child</span></h2>
+                            <p>This slide is a direct child of the slide-list element.</p>
+                            <p>We'll demonstrate FormChippy's ability to handle slides at various nesting levels.</p>
+                        </div>
+                    </div>
+
+                    <!-- Wrapper div level 1 - slide inside a div -->
+                    <div class="wrapper-level-1">
+                        <!-- Nested slide (Level 1) -->
+                        <div data-fc-slide="nested-1" data-nesting="1">
+                            <div data-fc-content>
+                                <h2>First Nested Level <span class="nesting-info nesting-1">Level 1</span></h2>
+                                <p>This slide is inside a wrapper div, one level deep.</p>
+                                <p>FormChippy can find and navigate to slides regardless of their DOM position.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Another direct child slide (Level 0) -->
+                    <div data-fc-slide="middle" data-nesting="0">
+                        <div data-fc-content>
+                            <h2>Another Direct Child <span class="nesting-info nesting-0">Direct Child</span></h2>
+                            <p>This slide is also a direct child of the slide-list element.</p>
+                            <p>You can mix and match slides at different nesting levels.</p>
+                        </div>
+                    </div>
+
+                    <!-- Wrapper div level 2 - two levels of nesting -->
+                    <div class="wrapper-level-1">
+                        <div class="wrapper-level-2">
+                            <!-- Double nested slide (Level 2) -->
+                            <div data-fc-slide="nested-2" data-nesting="2">
+                                <div data-fc-content>
+                                    <h2>Second Nested Level <span class="nesting-info nesting-2">Level 2</span></h2>
+                                    <p>This slide is nested two levels deep inside wrapper divs.</p>
+                                    <p>FormChippy will still find it and include it in the navigation flow.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wrapper div level 3 - three levels of nesting -->
+                    <div class="wrapper-level-1">
+                        <div class="wrapper-level-2">
+                            <div class="wrapper-level-3">
+                                <!-- Triple nested slide (Level 3) -->
+                                <div data-fc-slide="nested-3" data-nesting="3">
+                                    <div data-fc-content>
+                                        <h2>Deep Nesting <span class="nesting-info nesting-3">Level 3</span></h2>
+                                        <p>This slide is buried three levels deep!</p>
+                                        <p>FormChippy handles deeply nested slides with ease.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Final direct child slide (Level 0) -->
+                    <div data-fc-slide="final" data-nesting="0">
+                        <div data-fc-content>
+                            <h2>Conclusion <span class="nesting-info nesting-0">Direct Child</span></h2>
+                            <p>This final slide demonstrates that FormChippy smoothly navigates between slides at any level.</p>
+                            <p>The navigation and active state management works regardless of the DOM hierarchy.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End of slide-list -->
+            </div>
+            <!-- End of container -->
+
+            <!-- Debug information -->
+            <div class="current-slide-info" style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <h3>Debug Information</h3>
+                <div id="slideInfo"></div>
+            </div>
+        </div>
+
+        <!-- FormChippy Script -->
+        <script type="module" src="../dist/formchippy.js"></script>
+
+        <!-- Debug script to show current slide info -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Give FormChippy time to initialize
+                setTimeout(() => {
+                    // Get the FormChippy instance
+                    const formchippy = window.FormChippy.getInstance('nested-demo');
+                    const slideInfoEl = document.getElementById('slideInfo');
+                    
+                    // Function to update slide info display
+                    function updateSlideInfo() {
+                        if (!formchippy) return;
+                        
+                        const currentIndex = formchippy.getCurrentSlide();
+                        const totalSlides = formchippy.getTotalSlides();
+                        const currentSlide = formchippy.slides[currentIndex];
+                        
+                        if (currentSlide) {
+                            const nestingLevel = currentSlide.getAttribute('data-nesting');
+                            const slideId = currentSlide.getAttribute('data-fc-slide');
+                            const parentPath = getParentPath(currentSlide);
+                            
+                            slideInfoEl.innerHTML = `
+                                <p><strong>Current Slide:</strong> ${currentIndex + 1} of ${totalSlides}</p>
+                                <p><strong>Slide ID:</strong> ${slideId}</p>
+                                <p><strong>Nesting Level:</strong> ${nestingLevel}</p>
+                                <p><strong>DOM Path:</strong> ${parentPath}</p>
+                            `;
+                        }
+                    }
+                    
+                    // Helper to build parent element path
+                    function getParentPath(element) {
+                        let path = [];
+                        let current = element;
+                        
+                        // Go up to slide-list
+                        while (current && !current.hasAttribute('data-fc-slide-list')) {
+                            const tagName = current.tagName.toLowerCase();
+                            const classes = Array.from(current.classList).join('.');
+                            path.unshift(classes ? `${tagName}.${classes}` : tagName);
+                            current = current.parentElement;
+                        }
+                        
+                        return path.join(' > ');
+                    }
+                    
+                    // Initial update
+                    updateSlideInfo();
+                    
+                    // Listen for slide changes
+                    formchippy.on('slideChange', () => {
+                        updateSlideInfo();
+                    });
+                    
+                }, 500);
+            });
+        </script>
+    </body>
+</html>
