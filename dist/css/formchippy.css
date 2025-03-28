@@ -151,15 +151,15 @@
         max-width: 100%;
         padding: 0 1rem;
     }
-    
+
     [data-fc-slide-title] {
         font-size: 2rem;
     }
-    
+
     [data-fc-description] {
         font-size: 1.125rem;
     }
-    
+
     /* Hide dots on mobile */
     [data-fc-dots] {
         display: none;
@@ -170,12 +170,12 @@
     [data-fc-slide] {
         padding: 1.5rem;
     }
-    
+
     [data-fc-slide-title] {
         font-size: 1.75rem;
         margin-bottom: 1rem;
     }
-    
+
     [data-fc-description] {
         font-size: 1rem;
         margin-bottom: 1.5rem;

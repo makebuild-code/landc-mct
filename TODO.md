@@ -2,12 +2,17 @@
 
 ## Features
 
--   disable states for nav buttons; prev and next disable class
 -   slide grouping for progress bar via attributes for slides and progress bar to connect which slide group to which progress bar
--   curcular progress bar like a donut
--   validation per slide. check validation from API. connect with TypeScript guy.
+-   validation per slide
+    -- radio groups check if an option is selected
+    -- input fields check if they are not empty
+    -- check validation from API, connect with TypeScript person
 -   go to slide attribute button
 -   go to slide deppending on input
+-   show slide group depending on input
+-   query parameter to fill out inputs
+-   JS API example of running code before and after slide navigation
+-   JSON of input values to be sent to API
 -   donut bar should work even if progress bar element is not present
 -   if there is an error in the inputs of the content element, add `.error` class
 -   by default during slide transition animation, don't take in other navigation requests to prevent errors

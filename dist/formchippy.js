@@ -1,7 +1,13 @@
 /**
- * FormChippy.js v1.4.0
+ * FormChippy.js v1.5.0
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.5.0:
+ * - Enhanced form validation system with hierarchical required/optional handling
+ * - Added support for 'data-fc-required="false"' at multiple DOM levels (slide, content, field, etc.)
+ * - Unified error handling with consistent application of error classes to content elements
+ * - Improved debug logging throughout the validation process
  *
  * New in v1.4.0:
  * - Support for slides at any nesting level within the slide-list element
@@ -437,16 +443,12 @@ class FormChippy {
                 slide.classList.remove(this.options.activeClass)
             }
 
-            // Apply styles to content elements
+            // Apply only essential styles to content elements
             const contentElement = slide.querySelector('[data-fc-content]')
             if (contentElement) {
                 Object.assign(contentElement.style, {
-                    width: '100%',
-                    maxWidth: '600px',
-                    padding: '2rem',
-                    boxSizing: 'border-box',
                     overflowY: 'visible',
-                    maxHeight: '',
+                    maxHeight: ''
                 })
             }
         })
@@ -606,7 +608,7 @@ class FormChippy {
             )
 
             if (inputs.length > 0) {
-                // Filter for visible inputs
+                // Filter out elements that are already in the inputs or buttons arrays
                 const visibleInputs = inputs.filter((input) => {
                     const style = window.getComputedStyle(input)
                     return (
@@ -671,6 +673,9 @@ class FormChippy {
             totalSlides: this.slides.length,
             slideId: this.slides[index].getAttribute('data-fc-slide')
         })
+        
+        // Ensure tabindex focus trapping is updated on slide change
+        this._setupActiveSlideTabbing(this.slides[index])
     }
 
     /**
@@ -931,7 +936,7 @@ class FormChippy {
                         this.debug.info(
                             `QUEUED NAVIGATION: Now processing navigation to slide ${nextIndex}`
                         )
-                        this.goToSlide(nextIndex, true, true) // Force parameter to bypass jitter check
+                        this.goToSlide(nextIndex, true) // Force parameter to bypass jitter check
                     }
                 }, this._navigationState.debounceTime)
             }
@@ -1092,19 +1097,14 @@ class FormChippy {
 
                 // Only manage the active class on slides without hiding others
                 this.slides.forEach((slide) => {
-                    // Reset any previously applied content styles
+                    // Apply only essential styles to content elements
                     const slideContent =
                         slide.querySelector('[data-fc-content]')
                     if (slideContent) {
-                        // Reset content properties
+                        // Reset only overflow properties
                         Object.assign(slideContent.style, {
-                            width: '100%',
-                            maxWidth: '600px',
-                            padding: '2rem',
-                            boxSizing: 'border-box',
-                            position: 'relative',
                             overflow: '',
-                            maxHeight: '',
+                            maxHeight: ''
                         })
                     }
 
@@ -1244,7 +1244,7 @@ class FormChippy {
                                 this.debug.info(
                                     `PROCESSING QUEUED NAVIGATION to slide ${nextIndex}`
                                 )
-                                this.goToSlide(nextIndex, true, true)
+                                this.goToSlide(nextIndex, true)
                             }, 50)
                         }
                     }
