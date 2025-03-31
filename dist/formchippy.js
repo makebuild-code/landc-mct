@@ -1,7 +1,11 @@
 /**
- * FormChippy.js v1.5.0
+ * FormChippy.js v1.5.1
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.5.1:
+ * - Fixed data storage logic for standard radio button groups.
+ * - Corrected data handling for inputs nested within radiofield elements.
  *
  * New in v1.5.0:
  * - Enhanced form validation system with hierarchical required/optional handling

@@ -1,7 +1,7 @@
 {
   "name": "formchippy",
-  "version": "1.5.0",
-  "description": "A modern multi-step form library with validation and navigation",
+  "version": "1.5.1",
+  "description": "A smooth, vertical scrolling multi-step form experience",
   "main": "dist/formchippy.js",
   "scripts": {
     "dev": "http-server -p 3000 -c-1",

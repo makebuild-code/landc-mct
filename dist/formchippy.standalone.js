@@ -1,7 +1,11 @@
 /**
- * FormChippy.js v1.5.0 (Standalone)
+ * FormChippy.js v1.5.1 (Standalone)
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.5.1:
+ * - Fixed data storage logic for standard radio button groups.
+ * - Corrected data handling for inputs nested within radiofield elements.
  *
  * New in v1.5.0:
  * - Enhanced form validation system with hierarchical required/optional handling
@@ -747,7 +751,7 @@ class Navigation {
 /**
  * Validation.js
  * Handles form input validation
- * 
+ *
  * Form Validation Attributes:
  * - data-fc-required="false": Mark elements as not required (optional)
  *   Can be applied at multiple levels in hierarchy:
@@ -760,99 +764,123 @@ class Navigation {
  */
 
 class Validation {
+    /**
+     * @param {FormChippy} formChippy - The main FormChippy instance
+     */
     constructor(formChippy) {
-        this.formChippy = formChippy;
-        this.options = formChippy.options;
-        
+        this.formChippy = formChippy
+        this.options = formChippy.options
+
         // Initialize the form data object
-        this.formData = {};
-        
+        this.formData = {}
+
         // Set up input change listeners for all input types
-        this.setupInputChangeListeners();
+        this.setupInputChangeListeners()
     }
-    
+
     /**
      * Validate a slide's inputs
      * @param {HTMLElement} slide - The slide to validate
      * @returns {boolean} - True if valid, false otherwise
      */
     validateSlide(slide) {
-        const slideId = slide.getAttribute('data-fc-slide');
-        
-        // Check if validation is enabled via the data attribute
+        const slideId = slide.getAttribute('data-fc-slide')
+
         if (!this.formChippy.validationEnabled) {
-            this.formChippy.debug.info(`Validation skipped (disabled) for slide: ${slideId}`);
-            return true; // Skip validation and return valid
-        }
-        
-        this.formChippy.debug.info(`Validating slide: ${slideId}`);
-        
-        // Check if this slide has any elements to validate
-        const hasInputs = slide.querySelector(this.options.inputSelector) !== null;
-        const hasFieldElements = slide.querySelector('[data-fc-element="field"]') !== null;
-        const hasWebflowRadios = slide.querySelector('[data-fc-element="radio"], [data-fc-element="radio-input-field"]') !== null;
-        const hasAnyRadios = hasWebflowRadios || slide.querySelector('input[type="radio"]') !== null;
-        
-        // Log detailed information about what elements exist on this slide
-        this.formChippy.debug.info(`Slide ${slideId} validation inventory:`);
-        this.formChippy.debug.info(`- Has standard inputs: ${hasInputs ? 'YES' : 'NO'}`);
-        this.formChippy.debug.info(`- Has field elements: ${hasFieldElements ? 'YES' : 'NO'}`);
-        this.formChippy.debug.info(`- Has Webflow radio elements: ${hasWebflowRadios ? 'YES' : 'NO'}`);
-        this.formChippy.debug.info(`- Has any radio inputs: ${hasAnyRadios ? 'YES' : 'NO'}`);
-        
-        // If there's nothing to validate, slide is automatically valid
-        if (!hasInputs && !hasFieldElements && !hasAnyRadios) {
-            this.formChippy.debug.info(`Slide ${slideId} has NOTHING to validate - marking as automatically valid`);
-            return true;
-        }
-        
-        this.formChippy.debug.info(`Slide ${slideId} has elements to validate - proceeding with validation`);
-        
-        // Track validation state for each type of element
-        let isInputsValid = true;
-        let isFieldElementsValid = true;
-        let isRadioGroupsValid = true;
-        
-        // Only validate if we have standard inputs
-        if (hasInputs) {
-            // Validate standard inputs
-            const inputs = slide.querySelectorAll(this.options.inputSelector);
-            inputs.forEach((input) => {
-                if (!this.validateInput(input)) {
-                    isInputsValid = false;
-                }
-            });
-        }
-        
-        // Only validate if we have field elements
-        if (hasFieldElements) {
-            // Find and validate field elements (Webflow's nested input structure)
-            const fieldElements = slide.querySelectorAll('[data-fc-element="field"]');
-            fieldElements.forEach((fieldElement) => {
-                // Find the actual input inside the field element
-                const nestedInput = fieldElement.querySelector('input, textarea, select');
-                // Only validate if we found a nested input
-                if (nestedInput) {
-                    if (!this.validateInput(nestedInput, fieldElement)) {
-                        isFieldElementsValid = false;
-                    }
-                } else {
-                    // Log debug info if no input was found in a field element
-                    this.formChippy.debug.warn(`No input found in field element: ${fieldElement.outerHTML.substring(0, 100)}...`);
-                }
-            });
+            this.formChippy.debug.info(
+                `Validation skipped (disabled) for slide: ${slideId}`
+            )
+            return true
         }
 
-        // Only validate radio groups if we have them
+        this.formChippy.debug.info(`Validating slide: ${slideId}`)
+
+        // --- Step 1: Validate Radio Groups First ---
+        // Radio groups have special logic, including conditional validation of nested inputs.
+        // Handle them first to ensure their state is correct before general input validation.
+        let isRadioGroupsValid = true
+        const hasAnyRadios = slide.querySelector('input[type="radio"]') !== null
         if (hasAnyRadios) {
-            isRadioGroupsValid = this.validateRadioGroup(slide);
-            this.formChippy.debug.info(`Radio group validation result: ${isRadioGroupsValid ? 'Passed' : 'Failed'}`);
+            isRadioGroupsValid = this.validateRadioGroup(slide) // This function now handles inputs within selected radiofields
+            this.formChippy.debug.info(
+                `Radio group validation result for slide ${slideId}: ${
+                    isRadioGroupsValid ? 'Passed' : 'Failed'
+                }`
+            )
+        } else {
+            this.formChippy.debug.info(
+                `Slide ${slideId} has NO radio buttons to validate.`
+            )
         }
 
-        // Final slide validity depends on all elements that exist in the slide
-        const overallValid = isInputsValid && isFieldElementsValid && isRadioGroupsValid;
-        this.formChippy.debug.info(`Overall validation for slide ${slideId}: ${overallValid ? 'Passed' : 'Failed'}`);
-        return overallValid;
+        // --- Step 2: Validate Other Inputs ---
+        // Select all standard inputs (input, textarea, select) that are:
+        // 1. Not radio buttons (handled above).
+        // 2. Not inside a [data-fc-element="radiofield"] wrapper (handled by validateRadioGroup).
+        let isOtherInputsValid = true
+        const otherInputsSelector =
+            'input:not([type="radio"]), textarea, select'
+        const allPotentialInputs = slide.querySelectorAll(otherInputsSelector)
+        const inputsToValidate = Array.from(allPotentialInputs).filter(
+            (input) => !input.closest('[data-fc-element="radiofield"]') // Exclude inputs inside radiofields
+        )
+
+        this.formChippy.debug.info(
+            `Slide ${slideId} has ${inputsToValidate.length} other inputs to validate.`
+        )
+
+        if (inputsToValidate.length > 0) {
+            inputsToValidate.forEach((input) => {
+                // Determine the correct context element for error messages (might be a wrapper)
+                const fieldElement = input.closest('[data-fc-element="field"]') // Check if it's inside a Webflow-style field
+                const contextElement = fieldElement || input // Use field wrapper if available, otherwise the input itself
+
+                this.formChippy.debug.info(
+                    `Validating other input: ${
+                        input.name || input.id || 'unnamed'
+                    } (Context: ${contextElement.tagName})`
+                )
+
+                if (!this.validateInput(input, contextElement)) {
+                    // Pass context for error placement
+                    isOtherInputsValid = false
+                    this.formChippy.debug.warn(
+                        `Validation failed for other input: ${
+                            input.name || input.id || 'unnamed'
+                        }`
+                    )
+                }
+            })
+            this.formChippy.debug.info(
+                `Other input validation result for slide ${slideId}: ${
+                    isOtherInputsValid ? 'Passed' : 'Failed'
+                }`
+            )
+        } else {
+            this.formChippy.debug.info(
+                `Slide ${slideId} has NO other inputs to validate.`
+            )
+        }
+
+        // --- Step 3: Determine Overall Slide Validity ---
+        const overallValid = isRadioGroupsValid && isOtherInputsValid
+
+        // Check if there was anything to validate at all
+        const hasAnythingToValidate =
+            hasAnyRadios || inputsToValidate.length > 0
+        if (!hasAnythingToValidate) {
+            this.formChippy.debug.info(
+                `Slide ${slideId} has NOTHING to validate - marking as automatically valid (overriding initial checks).`
+            )
+            return true // If no radios AND no other inputs, it's valid.
+        }
+
+        this.formChippy.debug.info(
+            `Overall validation for slide ${slideId}: ${
+                overallValid ? 'Passed' : 'Failed'
+            }`
+        )
+        return overallValid
     }
 
     /**
@@ -862,8 +890,8 @@ class Validation {
      */
     validateEmail(email) {
         const re =
-            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return re.test(String(email).toLowerCase());
+            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        return re.test(String(email).toLowerCase())
     }
 
     /**
@@ -872,124 +900,424 @@ class Validation {
      */
     setupInputChangeListeners() {
         // Use event delegation on the container to catch all input changes
-        const container = document.querySelector(this.options.containerSelector);
-        if (!container) return;
-        
+        const container = document.querySelector(this.options.containerSelector)
+        if (!container) return
+
         // Listen for input events (fires as the user types)
         container.addEventListener('input', (event) => {
-            const input = event.target;
-            
+            const input = event.target
+
             // Handle all input types
-            if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA' || input.tagName === 'SELECT') {
+            if (
+                input.tagName === 'INPUT' ||
+                input.tagName === 'TEXTAREA' ||
+                input.tagName === 'SELECT'
+            ) {
                 // Update the form data
-                this.updateFormData(input);
-                
+                this.updateFormData(input)
+
                 // Check for and clear any input errors
-                if (input.classList.contains('fc-error') || input.classList.contains('error')) {
+                if (
+                    input.classList.contains('fc-error') ||
+                    input.classList.contains('error')
+                ) {
                     if (input.value.trim() !== '') {
                         // Clear the error specifically on this input
-                        this.clearInputError(input);
-                        
+                        this.clearInputError(input)
+
                         // Also clear parent content error if appropriate
-                        const contentElement = input.closest('[data-fc-content]');
-                        if (contentElement && contentElement.classList.contains('error')) {
-                            contentElement.classList.remove('error');
+                        const contentElement =
+                            input.closest('[data-fc-content]')
+                        if (
+                            contentElement &&
+                            contentElement.classList.contains(
+                                this.options.errorClass
+                            )
+                        ) {
+                            contentElement.classList.remove('error')
                         }
-                        
-                        this.formChippy.debug.info('Input value entered, cleared error state');
+
+                        this.formChippy.debug.info(
+                            'Input value entered, cleared error state'
+                        )
                     }
                 } else {
                     // Handle nested Webflow input structure
                     // Check if the input is inside a field element
-                    const fieldElement = input.closest('[data-fc-element="field"]');
-                    if (fieldElement && (fieldElement.classList.contains('fc-error') || fieldElement.classList.contains('error'))) {
+                    const fieldElement = input.closest(
+                        '[data-fc-element="field"]'
+                    )
+                    if (
+                        fieldElement &&
+                        (fieldElement.classList.contains('fc-error') ||
+                            fieldElement.classList.contains('error'))
+                    ) {
                         if (input.value.trim() !== '') {
                             // Clear the error on the field element
-                            this.clearInputError(fieldElement);
-                            
+                            this.clearInputError(fieldElement)
+
                             // Also clear parent content error if appropriate
-                            const contentElement = fieldElement.closest('[data-fc-content]');
-                            if (contentElement && contentElement.classList.contains('error')) {
-                                contentElement.classList.remove('error');
+                            const contentElement =
+                                fieldElement.closest('[data-fc-content]')
+                            if (
+                                contentElement &&
+                                contentElement.classList.contains(
+                                    this.options.errorClass
+                                )
+                            ) {
+                                contentElement.classList.remove('error')
                             }
-                            
-                            this.formChippy.debug.info('Input value entered in field element, cleared error state');
+
+                            // this.formChippy.debug.info( 'Input value entered in field element, cleared error state' )
                         }
                     }
                 }
             }
-        });
-        
+        })
+
         // Listen for change events (fires when input loses focus or radio/checkbox clicked)
         container.addEventListener('change', (event) => {
-            const input = event.target;
-            
+            const input = event.target
+
             // Special handling for radio buttons
             if (input.type === 'radio') {
-                const group = input.closest('[data-fc-input-group]');
+                // 1. Update form data for the radio button itself (only if checked)
+                this.updateFormData(input)
+
+                // --- Update Associated Inputs in RadioFields ---
+                // When a radio changes, we must explicitly update the data state
+                // for ALL inputs within ANY radiofield belonging to this group.
+                const groupName = input.name
+                const slideElement = input.closest('[data-fc-slide]')
+                if (slideElement && groupName) {
+                    const radiosInGroup = slideElement.querySelectorAll(
+                        `input[type="radio"][name="${groupName}"]`
+                    )
+                    radiosInGroup.forEach((radioInGroup) => {
+                        const radioFieldWrapper = radioInGroup.closest(
+                            '[data-fc-element="radiofield"]'
+                        )
+                        if (radioFieldWrapper) {
+                            const associatedInputs =
+                                radioFieldWrapper.querySelectorAll(
+                                    'input:not([type="radio"]), textarea, select'
+                                )
+                            associatedInputs.forEach((associatedInput) => {
+                                this.formChippy.debug.info(
+                                    `Triggering updateFormData for associated input '${associatedInput.name || associatedInput.dataset.fcInput}' due to radio '${groupName}' change.`
+                                )
+                                this.updateFormData(associatedInput) // This will check the radio's state
+                            })
+                        }
+                    })
+                } else {
+                    this.formChippy.debug.warn(
+                        `Could not find slide or group name to update associated radiofield inputs for:`,
+                        input
+                    )
+                }
+                // ---------------------------------------------
+
+                // 2. Update form data for inputs within the *related* radiofields
+                if (input.checked && input.name) {
+                    // Find all radios in the same group within this slide
+                    const groupName = input.name
+                    const radiosInGroup = slide.querySelectorAll(
+                        `input[type="radio"][name="${groupName}"]`
+                    )
+
+                    this.formChippy.debug.info(
+                        `Radio '${input.value}' changed. Updating related radiofield inputs for group '${groupName}'.`
+                    )
+
+                    radiosInGroup.forEach((radioInGroup) => {
+                        const radioFieldWrapper = radioInGroup.closest(
+                            '[data-fc-element="radiofield"]'
+                        )
+                        if (radioFieldWrapper) {
+                            const associatedInputs =
+                                radioFieldWrapper.querySelectorAll(
+                                    'input:not([type="radio"]), textarea, select'
+                                )
+                            associatedInputs.forEach((associatedInput) => {
+                                // Call updateFormData for the associated input.
+                                // This will add/update its value if its radio is checked,
+                                // or remove it if its radio is now unchecked.
+                                this.formChippy.debug.info(
+                                    `  - Triggering updateFormData for associated input '${
+                                        associatedInput.name || 'unnamed'
+                                    }' (parent radio: '${radioInGroup.value}')`
+                                )
+                                this.updateFormData(associatedInput)
+                            })
+                        }
+                    })
+                }
+
+                // 3. Clear potential group-level error message (visual only)
+                const group = input.closest('[data-fc-input-group]')
                 if (group) {
-                    // Update the form data
-                    this.updateFormData(input);
-                    
-                    const contentElement = group.closest('[data-fc-content]');
-                    if (contentElement && contentElement.classList.contains('error')) {
-                        // Clear the error state
-                        contentElement.classList.remove('error');
-                        this.clearInputError(group);
-                        this.formChippy.debug.info('Radio selection made, cleared error state');
+                    const contentElement = group.closest('[data-fc-content]')
+                    if (
+                        contentElement &&
+                        contentElement.classList.contains(
+                            this.options.errorClass
+                        )
+                    ) {
+                        this.clearInputError(group) // Use group context for message span
+                        this.formChippy.debug.info(
+                            `Radio selection made for group '${input.name}', cleared visual group error message.`
+                        )
                     }
                 }
             }
-            // Handle other change events for non-radio inputs
-            else if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA' || input.tagName === 'SELECT') {
-                // Update the form data
-                this.updateFormData(input);
+            // Handle change events for non-radio inputs
+            else if (
+                input.tagName === 'INPUT' ||
+                input.tagName === 'TEXTAREA' ||
+                input.tagName === 'SELECT'
+            ) {
+                // 1. Update the form data (includes logic for inputs inside radiofields)
+                this.updateFormData(input)
+
+                // 2. Re-validate the input to give immediate feedback
+                //    Especially important for inputs inside *selected* radiofields.
+                const radioFieldWrapper = input.closest(
+                    '[data-fc-element="radiofield"]'
+                )
+                if (radioFieldWrapper) {
+                    const associatedRadio = radioFieldWrapper.querySelector(
+                        'input[type="radio"]'
+                    )
+                    // Only re-validate if the associated radio is actually checked
+                    if (associatedRadio && associatedRadio.checked) {
+                        this.formChippy.debug.info(
+                            `Re-validating input '${
+                                input.getAttribute('data-input') || input.name
+                            }' in selected radiofield on change.`
+                        )
+                        // Determine context for error message placement
+                        const fieldElement = input.closest(
+                            '[data-fc-element="field"]'
+                        ) // Check if it's inside a Webflow-style field
+                        const contextElement = fieldElement || input // Use field wrapper if available, otherwise the input itself
+                        this.validateInput(input, contextElement) // Call validation
+                    } else {
+                        this.formChippy.debug.info(
+                            `Input '${
+                                input.getAttribute('data-input') || input.name
+                            }' changed in a NON-selected radiofield, skipping immediate re-validation.`
+                        )
+                    }
+                } else {
+                    // For regular inputs not in radiofields, re-validate on change too
+                    this.formChippy.debug.info(
+                        `Re-validating standard input '${
+                            input.getAttribute('data-input') || input.name
+                        }' on change.`
+                    )
+                    const fieldElement = input.closest(
+                        '[data-fc-element="field"]'
+                    )
+                    const contextElement = fieldElement || input
+                    this.validateInput(input, contextElement)
+                }
             }
-        });
+        })
     }
-    
+
     /**
      * Update the form data object with the latest input value
+     * Handles radio group updates (using group name as key).
+     * Handles radiofield updates (storing associated input data only if radio is checked).
+     * Handles checkbox groups (storing values in an array).
+     * Handles file inputs, number inputs, and default text inputs.
+     * Cleans up orphaned keys if radio `data-fc-input` was used inconsistently.
      * @param {HTMLElement} input - The input element
      */
     updateFormData(input) {
-        // Skip if no name attribute
-        if (!input.name) return;
-        
-        let value;
-        
-        // Handle different input types
-        if (input.type === 'checkbox') {
-            value = input.checked;
-        } else if (input.type === 'radio') {
-            // Only update if checked
-            if (input.checked) {
-                value = input.value;
-            } else {
-                return; // Skip unchecked radio buttons
-            }
-        } else if (input.type === 'number' || input.getAttribute('data-type') === 'number') {
-            // Convert to number if possible
-            value = input.value !== '' ? Number(input.value) : '';
-        } else {
-            value = input.value;
+        // Determine the key to use for form data: prioritize data-input, fallback to name
+        const dataKey = input.getAttribute('data-input') || input.name
+
+        // Skip if no key found or if the input is disabled
+        if (!dataKey || input.disabled) {
+            // Optionally log why it's skipped
+            // if (!dataKey) this.formChippy.debug.warn('Input skipped: No data-input or name attribute found.', input);
+            // if (input.disabled) this.formChippy.debug.info('Input skipped: Disabled.', input);
+            return
         }
-        
-        // Structure the form data by slide
-        const slide = input.closest('[data-fc-slide]');
-        const slideId = slide ? slide.getAttribute('data-fc-slide') : 'unknown';
-        
+
+        const slide = input.closest('[data-fc-slide]')
+        const slideId = slide ? slide.getAttribute('data-fc-slide') : 'unknown'
+
+        // Ensure slide object exists
         if (!this.formData[slideId]) {
-            this.formData[slideId] = {};
+            this.formData[slideId] = {}
         }
-        
-        this.formData[slideId][input.name] = value;
-        
-        // Log the updated form data
-        this.formChippy.debug.info(`Updated form data: ${input.name} = ${value}`);
-        this.formChippy.debug.info(`Current form data:`, this.formData);
+
+        let value
+        let shouldUpdate = true // Flag to control if the update proceeds
+
+        // --- Radio Button Handling ---
+        if (input.type === 'radio') {
+            if (input.checked) {
+                // Set the value for the group using the group name as the key
+                this.formData[slideId][input.name] = input.value
+                this.formChippy.debug.info(
+                    `Updated radio group '${input.name}': ${input.value}`
+                )
+
+                // Cleanup potentially orphaned keys if data-fc-input was used inconsistently
+                const slideElement = input.closest('[data-fc-slide]')
+                if (slideElement) {
+                    const radiosInGroup = slideElement.querySelectorAll(
+                        `input[type="radio"][name="${input.name}"]`
+                    )
+                    radiosInGroup.forEach((radioInGroup) => {
+                        if (radioInGroup !== input) { // Only check *other* radios
+                            const otherDataKey = radioInGroup.dataset.fcInput
+                            // If another radio used data-fc-input and it's different from the groupName,
+                            // and that key exists in formData, remove it.
+                            if (
+                                otherDataKey &&
+                                otherDataKey !== input.name &&
+                                this.formData[slideId] &&
+                                this.formData[slideId].hasOwnProperty(otherDataKey)
+                            ) {
+                                delete this.formData[slideId][otherDataKey]
+                                this.formChippy.debug.info(
+                                    `Cleaned up orphaned radio key '${otherDataKey}' from group '${input.name}'`
+                                )
+                            }
+                        }
+                    })
+                } else {
+                    this.formChippy.debug.warn(
+                        `Could not find slide element for radio group cleanup:`,
+                        input
+                    )
+                }
+
+                shouldUpdate = false // Handled radio specifically
+            } else {
+                // If an unchecked radio event occurs (less common), do nothing.
+                // The corresponding checked radio's event will set the correct value.
+                return
+            }
+        }
+        // --- End Radio Button Handling ---
+
+        // --- Radio Field Input Handling (Inputs *inside* radio labels) ---
+        // Check if the input is inside a radio field wrapper
+        const radioFieldWrapper = input.closest('[data-fc-element="radiofield"]')
+        if (input.type !== 'radio' && radioFieldWrapper) {
+            // Find the associated radio button within the wrapper
+            const associatedRadio = radioFieldWrapper.querySelector(
+                'input[type="radio"]'
+            )
+
+            if (associatedRadio && !associatedRadio.checked) {
+                // Radio NOT checked: remove this input's data if it exists
+                if (
+                    this.formData[slideId] &&
+                    this.formData[slideId].hasOwnProperty(dataKey)
+                ) {
+                    delete this.formData[slideId][dataKey]
+                    this.formChippy.debug.info(
+                        `Removed form data for input key '${dataKey}' in unselected radiofield.`
+                    )
+                } else {
+                    // It might already be absent, which is fine
+                    this.formChippy.debug.info(
+                        `Input key '${dataKey}' in unselected radiofield was not present in formData, nothing to remove.`
+                    )
+                }
+                // Log after potential deletion
+                this.formChippy.debug.info(
+                    `Current formData after potential removal:`,
+                    this.formData
+                )
+                shouldUpdate = false // Do not proceed with adding/updating this value
+            } else if (associatedRadio && associatedRadio.checked) {
+                // Radio IS checked: Allow this input's data to be stored.
+                // shouldUpdate remains true, so the standard update logic below will handle it.
+                this.formChippy.debug.info(
+                    `Input key '${dataKey}' is in a SELECTED radiofield. Allowing its value to be processed.`
+                )
+            } else if (!associatedRadio) {
+                this.formChippy.debug.warn(
+                    `Input with key '${dataKey}' is in a radiofield wrapper but no associated radio was found.`
+                )
+                // Decide how to handle this - maybe treat as normal input?
+                // For now, let shouldUpdate remain true, allowing default handling.
+            } else {
+                // Default case if radio exists but state is indeterminate? Assume treat as normal.
+                this.formChippy.debug.info(
+                    `Input key '${dataKey}' in radiofield, associated radio state unclear or not found, proceeding with default update.`
+                )
+            }
+        }
+        // --- End Radio Field Input Handling ---
+
+        // --- Standard Update Logic --- (Only runs if shouldUpdate is still true)
+        if (shouldUpdate) {
+            // Checkboxes (Groups)
+            if (input.type === 'checkbox') {
+                const groupKey = dataKey // Use dataKey derived earlier (data-fc-input or name)
+                // Initialize the group array if it doesn't exist
+                if (!this.formData[slideId][groupKey]) {
+                    this.formData[slideId][groupKey] = []
+                }
+
+                if (input.checked) {
+                    // Add value to the array if not already present
+                    if (!this.formData[slideId][groupKey].includes(value)) {
+                        this.formData[slideId][groupKey].push(value)
+                    }
+                } else {
+                    // Remove value from the array
+                    this.formData[slideId][groupKey] = this.formData[slideId][
+                        groupKey
+                    ].filter((item) => item !== value)
+                }
+                // If array is empty after removal, consider deleting the key?
+                // if (this.formData[slideId][groupKey].length === 0) {
+                //     delete this.formData[slideId][groupKey];
+                // }
+                this.formChippy.debug.info(
+                    `Updated checkbox group '${groupKey}': ${JSON.stringify(
+                        this.formData[slideId][groupKey]
+                    )}`
+                )
+            } else if (
+                input.type === 'number' ||
+                input.getAttribute('data-input-type') === 'currency'
+            ) {
+                // Check data-input-type too
+                value = input.value !== '' ? Number(input.value) : '' // Keep empty strings for empty required numbers
+                this.formData[slideId][dataKey] = value
+                this.formChippy.debug.info(
+                    `Updated number/currency input '${dataKey}': ${value}`
+                )
+            } else if (input.type === 'file') {
+                value = input.files // Store FileList object
+                this.formData[slideId][dataKey] = value
+                this.formChippy.debug.info(
+                    `Updated file input '${dataKey}': ${input.files.length} file(s) selected`
+                )
+            } else {
+                // Default for text, textarea, select, etc.
+                value = input.value
+                this.formData[slideId][dataKey] = value
+                this.formChippy.debug.info(`Updated input '${dataKey}': ${value}`)
+            }
+        }
+        // --- End Standard Update Logic ---
+
+        // Log the complete, updated form data object AFTER every update attempt, regardless of whether standard update ran
+        this.formChippy.debug.info(`Current formData:`, this.formData)
     }
-    
+
     /**
      * Validate a single input element
      * @param {HTMLElement} input - The input to validate
@@ -1001,45 +1329,60 @@ class Validation {
      */
     toggleContentError(element, hasError, message) {
         // Find the content element
-        const contentElement = element.closest('[data-fc-content]');
+        const contentElement = element.closest('[data-fc-content]')
         if (!contentElement) {
-            this.formChippy.debug.warn('No content element found for error handling');
-            return;
+            this.formChippy.debug.warn(
+                'No content element found for error handling'
+            )
+            return
         }
 
         if (hasError) {
             // Add error class if not already present
             if (!contentElement.classList.contains('error')) {
-                contentElement.classList.add('error');
-                this.formChippy.debug.info(`Added error class to content element`);
+                contentElement.classList.add('error')
+                this.formChippy.debug.info(
+                    `Added error class to content element`
+                )
 
                 // Only add error message if there's no custom error element and a message was provided
-                if (message && !contentElement.querySelector('[data-fc-content-error]')) {
+                if (
+                    message &&
+                    !contentElement.querySelector('[data-fc-content-error]')
+                ) {
                     // Add a custom error message to the content element
-                    const errorElement = document.createElement('div');
-                    errorElement.className = 'fc-error-message';
-                    errorElement.textContent = message;
-                    errorElement.style.color = 'var(--fc-error-color, var(--mct-error-color, #ff3860))';
-                    errorElement.style.fontSize = '0.875rem';
-                    
+                    const errorElement = document.createElement('div')
+                    errorElement.className = 'fc-error-message'
+                    errorElement.textContent = message
+                    errorElement.style.color =
+                        'var(--fc-error-color, var(--mct-error-color, #ff3860))'
+                    errorElement.style.fontSize = '0.875rem'
+
                     // Only append if no error message already exists
                     if (!contentElement.querySelector('.fc-error-message')) {
-                        contentElement.appendChild(errorElement);
-                        this.formChippy.debug.info(`Added error message to content element`);
+                        contentElement.appendChild(errorElement)
+                        this.formChippy.debug.info(
+                            `Added error message to content element`
+                        )
                     }
                 }
             }
         } else {
             // Remove error class if present
             if (contentElement.classList.contains('error')) {
-                contentElement.classList.remove('error');
-                this.formChippy.debug.info(`Removed error class from content element`);
-                
+                contentElement.classList.remove('error')
+                this.formChippy.debug.info(
+                    `Removed error class from content element`
+                )
+
                 // Remove any error messages
-                const errorElement = contentElement.querySelector('.fc-error-message');
+                const errorElement =
+                    contentElement.querySelector('.fc-error-message')
                 if (errorElement) {
-                    errorElement.remove();
-                    this.formChippy.debug.info(`Removed error message from content element`);
+                    errorElement.remove()
+                    this.formChippy.debug.info(
+                        `Removed error message from content element`
+                    )
                 }
             }
         }
@@ -1051,278 +1394,596 @@ class Validation {
     validateInput(input, fieldElement) {
         // Check if input exists and is a valid element
         if (!input || typeof input !== 'object') {
-            console.warn('FormChippy: Invalid input element passed to validateInput');
-            return false; // Return false to indicate validation failed
+            console.warn(
+                'FormChippy: Invalid input element passed to validateInput'
+            )
+            return false // Return false to indicate validation failed
         }
-        
+
         // Clear previous errors
-        const elementToApplyError = fieldElement || input;
-        this.clearInputError(elementToApplyError);
-        
+        const elementToApplyError = fieldElement || input
+        this.clearInputError(elementToApplyError)
+
         // Safely check if input has a value property
-        const inputValue = input.value !== undefined ? input.value : '';
-        const trimmedValue = typeof inputValue === 'string' ? inputValue.trim() : '';
-        
+        const inputValue = input.value !== undefined ? input.value : ''
+        const trimmedValue =
+            typeof inputValue === 'string' ? inputValue.trim() : ''
+
         // Check if input should be treated as optional by checking various parent elements
         // Check the input itself, its parent content element, slide, or associated label
-        
+
         // Get parent elements
-        const slide = input.closest('[data-fc-slide]');
-        const contentElement = input.closest('[data-fc-content]');
-        const fieldContainer = input.closest('[data-fc-question]');
-        const label = fieldContainer?.querySelector('label');
-        
+        const slide = input.closest('[data-fc-slide]')
+        const contentElement = input.closest('[data-fc-content]')
+        const fieldContainer = input.closest('[data-fc-question]')
+        const label = fieldContainer?.querySelector('label')
+
         // Check hierarchical elements for required=false
-        const isNotRequired = 
-            input.getAttribute('data-fc-required') === 'false' || 
-            (contentElement && contentElement.getAttribute('data-fc-required') === 'false') ||
+        const isNotRequired =
+            input.getAttribute('data-fc-required') === 'false' ||
+            (contentElement &&
+                contentElement.getAttribute('data-fc-required') === 'false') ||
             (slide && slide.getAttribute('data-fc-required') === 'false') ||
-            (label && label.getAttribute('data-fc-required') === 'false');
-        
-        this.formChippy.debug.info(`Validating input ${input.name || input.id || 'unnamed'}: ${isNotRequired ? 'Optional' : 'Required'}`);
-        
+            (label && label.getAttribute('data-fc-required') === 'false')
+
+        this.formChippy.debug.info(
+            `Validating input ${input.name || input.id || 'unnamed'}: ${
+                isNotRequired ? 'Optional' : 'Required'
+            }`
+        )
+
         if (isNotRequired && trimmedValue === '') {
-            this.formChippy.debug.info(`Optional input is empty, skipping validation`);
-            return true;
+            this.formChippy.debug.info(
+                `Optional input is empty, skipping validation`
+            )
+            return true
         }
-        
+
         // Check if the input is empty
         if (trimmedValue === '') {
-            this.formChippy.debug.info(`Required input is empty, validation failed`);
-            this.showInputError(elementToApplyError, 'This field is required');
-            
+            this.formChippy.debug.info(
+                `Required input is empty, validation failed`
+            )
+            this.showInputError(elementToApplyError, 'This field is required')
+
             // Also apply error class to the content element
-            this.toggleContentError(input, true, 'This field is required');
-            return false;
+            this.toggleContentError(input, true, 'This field is required')
+            return false
         }
-        
+
         // All other validation is skipped per requirements
-        return true;
+        return true
     }
 
     /**
-     * Validate radio button groups within a specific slide
+     * Validate radio button groups within a specific slide,
+     * handling mixed groups of standard radios and radiofields.
      * @param {HTMLElement} slide - The slide containing the radio groups
      * @returns {boolean} - True if all radio groups are valid, false otherwise
      */
     validateRadioGroup(slide) {
-        const slideId = slide.getAttribute('data-fc-slide');
-        this.formChippy.debug.info(`Starting radio group validation for slide: ${slideId}`);
-        
-        // First check if there are any radio inputs in the slide
-        const allRadioInputs = slide.querySelectorAll('input[type="radio"]');
-        this.formChippy.debug.info(`Found ${allRadioInputs.length} radio inputs in slide ${slideId}`);
-        
-        // If there are no radio inputs, validation passes by default
-        if (allRadioInputs.length === 0) {
-            this.formChippy.debug.info('No radio inputs found, skipping radio validation');
-            return true;
-        }
-        
-        // Find all Webflow-style radio elements
-        const radioElements = slide.querySelectorAll('[data-fc-element="radio"], [data-fc-element="radio-input-field"]');
-        this.formChippy.debug.info(`Found ${radioElements.length} Webflow-style radio elements in slide ${slideId}`);
-        
-        // If there are no structured Webflow radio elements, check for any radio inputs directly
-        if (radioElements.length === 0) {
-            this.formChippy.debug.info(`No Webflow radio elements found, checking for any radio inputs`);
-            // Check if there are any radio inputs at all
-            const allLooseRadios = slide.querySelectorAll('input[type="radio"]');
-            this.formChippy.debug.info(`Found ${allLooseRadios.length} radio inputs not in Webflow structure`);
-            
-            if (allLooseRadios.length === 0) {
-                this.formChippy.debug.info('No radio inputs found at all, skipping radio validation');
-                return true;
-            }
-            
-            // For loose radio inputs, group them by name attribute
-            const radiosByName = {};
-            
-            Array.from(allLooseRadios).forEach(radio => {
-                if (radio.name) {
-                    if (!radiosByName[radio.name]) {
-                        radiosByName[radio.name] = [];
-                    }
-                    radiosByName[radio.name].push(radio);
-                }
-            });
-            
-            this.formChippy.debug.info(`Grouped loose radio inputs by name, found ${Object.keys(radiosByName).length} groups`);
-            
-            // If no named groups were found, there's nothing to validate
-            if (Object.keys(radiosByName).length === 0) {
-                this.formChippy.debug.info('No named radio groups found, skipping validation');
-                return true;
-            }
-            
-            let allGroupsValid = true;
-            
-            // Process each radio group by name
-            Object.keys(radiosByName).forEach((groupName, index) => {
-                this.formChippy.debug.info(`Validating radio group: '${groupName}' (${index + 1}/${Object.keys(radiosByName).length})`);
-                
-                const radiosInGroup = radiosByName[groupName];
-                this.formChippy.debug.info(`Group '${groupName}' has ${radiosInGroup.length} radio buttons`);
-                
-                // Get relevant parent elements for the first radio in the group
-                const radioElement = radiosInGroup[0]; 
-                const radioSlide = radioElement.closest('[data-fc-slide]');
-                const radioContentElement = radioElement.closest('[data-fc-content]');
-                const radioFieldContainer = radioElement.closest('[data-fc-question]');
-                const radioLabel = radioFieldContainer?.querySelector('label');
-                
-                // Check hierarchical elements for required=false
-                const isNotRequired = 
-                    // Check if any radio in the group has the required=false attribute
-                    radiosInGroup.some(radio => radio.getAttribute('data-fc-required') === 'false') || 
-                    // Check parent elements
-                    (radioContentElement && radioContentElement.getAttribute('data-fc-required') === 'false') ||
-                    (radioSlide && radioSlide.getAttribute('data-fc-required') === 'false') ||
-                    (radioLabel && radioLabel.getAttribute('data-fc-required') === 'false');
-                    
-                this.formChippy.debug.info(`Group '${groupName}' status: ${isNotRequired ? 'Optional' : 'Required'}`);
-                
-                // Skip validation for optional groups
-                if (isNotRequired) {
-                    this.formChippy.debug.info(`Skipping validation for optional group '${groupName}'`);
-                    return; // Continue to next group
-                }
-                
-                // Check if any radio in the group is checked
-                const isChecked = radiosInGroup.some(radio => radio.checked);
-                this.formChippy.debug.info(`Group '${groupName}' has a selected option: ${isChecked ? 'Yes' : 'No'}`);
-                
-                // The radioElement variable is already defined above (was previously named firstRadio)
-                // Find the parent content element for error display
-                const radioParent = radioElement.closest('[data-fc-question]') || radioElement.closest('[data-fc-content]');
-                const displayContentElement = radioParent ? (radioParent.closest('[data-fc-content]') || radioParent) : null;
-                this.formChippy.debug.info(`Found content element for group '${groupName}': ${displayContentElement ? 'Yes' : 'No'}`);
+        const slideId = slide.getAttribute('data-fc-slide')
+        this.formChippy.debug.info(
+            `Starting unified radio/radiofield group validation for slide: ${slideId}`
+        )
 
-                if (!isChecked) {
-                    // Use the unified error handling for content element
-                    this.toggleContentError(radioElement, true, 'Please select an option');
-                    allGroupsValid = false; // Mark as invalid if any group fails
-                } else {
-                    // Use the unified error handling to clear error
-                    this.toggleContentError(radioElement, false);
-                }
-            });
-            
-            this.formChippy.debug.info(`Radio group validation for slide ${slide.getAttribute('data-fc-slide')}: ${allGroupsValid ? 'Passed' : 'Failed'}`);
-            return allGroupsValid;
+        // --- Step 1: Collect all radio inputs and their context ---
+        const allRadioInputs = slide.querySelectorAll('input[type="radio"]')
+        this.formChippy.debug.info(
+            `Found ${allRadioInputs.length} total radio inputs in slide ${slideId}`
+        )
+
+        if (allRadioInputs.length === 0) {
+            this.formChippy.debug.info(
+                'No radio inputs found, skipping radio validation'
+            )
+            return true
         }
-        
-        // Process Webflow-style radio groups by name attribute
-        this.formChippy.debug.info(`Processing Webflow-style radio groups for slide ${slideId}`);
-        
-        // First, collect all radio inputs by their name to handle them as groups
-        const radiosByName = {};
-        
-        // Find all radio inputs within the radio elements
-        radioElements.forEach((radioElement, index) => {
-            this.formChippy.debug.info(`Processing radio element ${index + 1}/${radioElements.length}`);
-            
-            const radioInput = radioElement.querySelector('input[type="radio"]');
-            if (radioInput && radioInput.name) {
-                const radioName = radioInput.name;
-                this.formChippy.debug.info(`Found radio input with name: ${radioName}`);
-                
-                if (!radiosByName[radioName]) {
-                    radiosByName[radioName] = [];
-                    this.formChippy.debug.info(`Created new group for '${radioName}'`);
+
+        // --- Step 2: Group radios by name and gather details ---
+        const radiosByName = {}
+        allRadioInputs.forEach((radio) => {
+            if (radio.name) {
+                const groupName = radio.name
+                if (!radiosByName[groupName]) {
+                    radiosByName[groupName] = [] // Initialize group if it doesn't exist
                 }
-                
-                radiosByName[radioName].push(radioInput);
-                this.formChippy.debug.info(`Added radio to group '${radioName}', now has ${radiosByName[radioName].length} radios`);
+
+                const radioFieldWrapper = radio.closest(
+                    '[data-fc-element="radiofield"]'
+                )
+                const standardRadioWrapper = radio.closest(
+                    '[data-fc-element="radio"], [data-fc-element="radio-input-field"]'
+                )
+                let inputFields = []
+                let wrapperElement =
+                    radioFieldWrapper || standardRadioWrapper || radio // Fallback to radio itself
+
+                if (radioFieldWrapper) {
+                    // If it's in a radiofield, find associated inputs within that wrapper
+                    inputFields = Array.from(
+                        radioFieldWrapper.querySelectorAll(
+                            'input:not([type="radio"]), textarea, select'
+                        )
+                    )
+                    this.formChippy.debug.info(
+                        `Radio '${radio.value}' (group '${groupName}') is in a radiofield with ${inputFields.length} associated inputs.`
+                    )
+                } else {
+                    this.formChippy.debug.info(
+                        `Radio '${radio.value}' (group '${groupName}') is a standard radio or loose input.`
+                    )
+                }
+
+                radiosByName[groupName].push({
+                    radio: radio,
+                    isRadioField: !!radioFieldWrapper, // Boolean flag
+                    wrapper: wrapperElement, // The radiofield wrapper, standard wrapper, or the input itself
+                    inputFields: inputFields, // Array of associated inputs (only for radiofields)
+                })
             } else {
-                this.formChippy.debug.warn(`Radio element ${index + 1} has no valid input or name attribute`);
+                this.formChippy.debug.warn(
+                    `Radio input found without a name attribute, cannot group for validation: ${radio.outerHTML.substring(
+                        0,
+                        100
+                    )}...`
+                )
             }
-        });
-        
-        this.formChippy.debug.info(`Found ${Object.keys(radiosByName).length} radio groups by name: ${Object.keys(radiosByName).join(', ')}`);
-        
-        let allGroupsValid = true;
-        
-        // Process each radio group by name
-        Object.keys(radiosByName).forEach(groupName => {
-            this.formChippy.debug.info(`Validating radio group: '${groupName}'`);
-            
-            const radiosInGroup = radiosByName[groupName];
-            this.formChippy.debug.info(`Group '${groupName}' has ${radiosInGroup.length} radio buttons`);
-            
-            // Get the first radio in the group to check parent elements
-            const groupRadioEl = radiosInGroup[0];
-            const radioGroupSlide = groupRadioEl.closest('[data-fc-slide]');
-            const radioGroupContent = groupRadioEl.closest('[data-fc-content]');
-            const radioGroupContainer = groupRadioEl.closest('[data-fc-question]');
-            const radioGroupLabel = radioGroupContainer?.querySelector('label');
-            
-            // Check hierarchical elements for required=false
-            const isGroupNotRequired = 
-                // Check if any radio in the group has required=false attribute
-                radiosInGroup.some(radio => radio.getAttribute('data-fc-required') === 'false') || 
-                // Check parent elements
-                (radioGroupContent && radioGroupContent.getAttribute('data-fc-required') === 'false') ||
-                (radioGroupSlide && radioGroupSlide.getAttribute('data-fc-required') === 'false') ||
-                (radioGroupLabel && radioGroupLabel.getAttribute('data-fc-required') === 'false');
-            
-            this.formChippy.debug.info(`Group '${groupName}' status: ${isGroupNotRequired ? 'Optional' : 'Required'}`);
-            
-            // Skip validation for optional groups
+        })
+
+        this.formChippy.debug.info(
+            `Grouped radios into ${
+                Object.keys(radiosByName).length
+            } groups by name: ${Object.keys(radiosByName).join(', ')}`
+        )
+
+        // --- Step 3: Validate each group ---
+        let allGroupsValid = true
+
+        Object.keys(radiosByName).forEach((groupName) => {
+            const groupItems = radiosByName[groupName] // Array of {radio, isRadioField, wrapper, inputFields}
+            this.formChippy.debug.info(
+                `Validating group: '${groupName}' with ${groupItems.length} item(s)`
+            )
+
+            // --- 3a: Check if the group is required ---
+            // We check the required status based on any item in the group and its hierarchy.
+            // If *any* item suggests it's optional, the whole group is treated as optional.
+            const isGroupNotRequired = groupItems.some((item) => {
+                const radioElement = item.radio
+                const wrapperElement = item.wrapper
+                const radioContentElement =
+                    radioElement.closest('[data-fc-content]')
+                const radioSlideElement =
+                    radioElement.closest('[data-fc-slide]')
+                const radioQuestionContainer =
+                    radioElement.closest('[data-fc-question]')
+                const radioLabel =
+                    radioQuestionContainer?.querySelector('label') // Check label associated with the container
+                const directLabel = document.querySelector(
+                    `label[for="${radioElement.id}"]`
+                ) // Check direct label
+
+                return (
+                    radioElement.getAttribute('data-fc-required') === 'false' ||
+                    (wrapperElement !== radioElement &&
+                        wrapperElement.getAttribute('data-fc-required') ===
+                            'false') || // Check wrapper if it exists and isn't the input itself
+                    (radioContentElement &&
+                        radioContentElement.getAttribute('data-fc-required') ===
+                            'false') ||
+                    (radioSlideElement &&
+                        radioSlideElement.getAttribute('data-fc-required') ===
+                            'false') ||
+                    (radioQuestionContainer &&
+                        radioQuestionContainer.getAttribute(
+                            'data-fc-required'
+                        ) === 'false') ||
+                    (radioLabel &&
+                        radioLabel.getAttribute('data-fc-required') ===
+                            'false') ||
+                    (directLabel &&
+                        directLabel.getAttribute('data-fc-required') ===
+                            'false')
+                )
+            })
+
+            this.formChippy.debug.info(
+                `Group '${groupName}' status: ${
+                    isGroupNotRequired ? 'Optional' : 'Required'
+                }`
+            )
+
+            // --- 3b: Handle Optional Group ---
             if (isGroupNotRequired) {
-                this.formChippy.debug.info(`Skipping validation for optional group '${groupName}'`);
-                return; // Continue to next group
+                this.formChippy.debug.info(
+                    `Skipping required check for optional group '${groupName}'`
+                )
+                // Clear any "Please select an option" error for the group
+                const firstItemWrapper = groupItems[0].wrapper
+                const displayElement =
+                    firstItemWrapper.closest('[data-fc-question]') ||
+                    firstItemWrapper.closest('[data-fc-content]') ||
+                    firstItemWrapper
+                this.toggleContentError(displayElement, false)
+
+                // Also clear errors on any inputs within radiofields in this optional group
+                groupItems.forEach((item) => {
+                    if (item.isRadioField && item.inputFields.length > 0) {
+                        this.formChippy.debug.info(
+                            `Clearing errors for ${item.inputFields.length} inputs in unselected radiofield (value: ${item.radio.value}) of failed group '${groupName}'`
+                        )
+                        item.inputFields.forEach((input) =>
+                            this.clearInputError(input)
+                        )
+                    }
+                })
+                return // Skip to the next group
             }
-            
-            // Check if any radio in the group is checked
-            const isChecked = radiosInGroup.some(radio => radio.checked);
-            this.formChippy.debug.info(`Group '${groupName}' has a selected option: ${isChecked ? 'Yes' : 'No'}`);
-            
-            // Log which option is selected if any
-            if (isChecked) {
-                const selectedOption = radiosInGroup.find(radio => radio.checked);
-                if (selectedOption) {
-                    this.formChippy.debug.info(`Selected option in group '${groupName}': ${selectedOption.value || 'No value'}`);
+
+            // --- 3c: Check if any radio in the REQUIRED group is checked ---
+            const selectedItem = groupItems.find((item) => item.radio.checked)
+            const isChecked = !!selectedItem // True if an item was found
+            this.formChippy.debug.info(
+                `Group '${groupName}' has a selected option: ${
+                    isChecked ? 'Yes' : 'No'
+                }`
+            )
+
+            // Find a suitable element to display the "Please select" error (use the first item's context)
+            const firstItem = groupItems[0]
+            const groupErrorDisplayElement =
+                firstItem.radio.closest('[data-fc-question]') ||
+                firstItem.radio.closest('[data-fc-content]') ||
+                firstItem.wrapper
+
+            if (!isChecked) {
+                // No radio selected in a required group - show error
+                this.formChippy.debug.info(
+                    `Group '${groupName}' failed: No option selected.`
+                )
+                if (groupErrorDisplayElement) {
+                    this.toggleContentError(
+                        groupErrorDisplayElement,
+                        true,
+                        'Please select an option'
+                    )
+                } else {
+                    this.formChippy.debug.warn(
+                        `Could not find suitable element to display 'Please select an option' error for group ${groupName}`
+                    )
+                }
+                allGroupsValid = false
+
+                // Ensure inputs in any radiofields within this failed group are cleared of errors
+                groupItems.forEach((item) => {
+                    if (item.isRadioField && item.inputFields.length > 0) {
+                        this.formChippy.debug.info(
+                            `Clearing errors for ${item.inputFields.length} inputs in unselected radiofield (value: ${item.radio.value}) of failed group '${groupName}'`
+                        )
+                        item.inputFields.forEach((input) =>
+                            this.clearInputError(input)
+                        )
+                    }
+                })
+
+                return // Skip further validation for this group
+            }
+
+            // --- 3d: A radio IS selected in the required group ---
+            this.formChippy.debug.info(
+                `Selected option in group '${groupName}': ${selectedItem.radio.value}`
+            )
+
+            // Clear the group-level error ("Please select an option")
+            if (groupErrorDisplayElement) {
+                this.toggleContentError(groupErrorDisplayElement, false)
+            }
+
+            // Validate inputs IF the selected item is a radiofield with inputs
+            if (
+                selectedItem.isRadioField &&
+                selectedItem.inputFields.length > 0
+            ) {
+                this.formChippy.debug.info(
+                    `Validating ${selectedItem.inputFields.length} input fields in selected radiofield for group '${groupName}'`
+                )
+                let allSelectedInputsValid = true
+                selectedItem.inputFields.forEach((inputField) => {
+                    // Use existing validateInput, passing the radiofield wrapper for context
+                    if (!this.validateInput(inputField, selectedItem.wrapper)) {
+                        allSelectedInputsValid = false
+                        this.formChippy.debug.info(
+                            `Input field validation failed for ${
+                                inputField.name || 'unnamed field'
+                            } in selected radiofield of group '${groupName}'`
+                        )
+                    }
+                })
+
+                if (!allSelectedInputsValid) {
+                    allGroupsValid = false // If any input in the selected radiofield fails, the whole group fails validation for this slide check
+                    this.formChippy.debug.info(
+                        `Group '${groupName}' failed: Input validation failed within the selected radiofield.`
+                    )
+                }
+            } else {
+                this.formChippy.debug.info(
+                    `Selected item in group '${groupName}' is not a radiofield or has no inputs to validate.`
+                )
+            }
+
+            // Clear errors for inputs within any UNSELECTED radiofields in this group
+            groupItems.forEach((item) => {
+                if (
+                    item !== selectedItem &&
+                    item.isRadioField &&
+                    item.inputFields.length > 0
+                ) {
+                    this.formChippy.debug.info(
+                        `Clearing errors for ${item.inputFields.length} inputs in non-selected radiofield (value: ${item.radio.value}) of group '${groupName}'`
+                    )
+                    item.inputFields.forEach((input) => {
+                        this.clearInputError(input)
+                        // Clear potential error on the wrapper itself if needed (might have been set by validateInput)
+                        this.clearInputError(item.wrapper)
+                        // Ensure the higher-level content error is also cleared if appropriate
+                        const contentElem = input.closest('[data-fc-content]')
+                        if (
+                            contentElem &&
+                            contentElem.classList.contains(
+                                this.options.errorClass
+                            )
+                        ) {
+                            this.toggleContentError(input, false) // Use input context to find correct error message span
+                        }
+                    })
+                }
+            })
+        }) // End of loop through each group name
+
+        this.formChippy.debug.info(
+            `Unified radio validation finished for slide ${slideId}: ${
+                allGroupsValid ? 'Passed' : 'Failed'
+            }`
+        )
+        return allGroupsValid
+    }
+
+    /**
+     * Listens for 'change' events on inputs, textareas, and selects within slides.
+     * Calls `updateFormData` to store the value.
+     * For radio buttons, it also triggers `updateFormData` for all associated inputs
+     * within any radiofield in the same group to ensure data consistency (adding/removing
+     * nested input data based on radio selection).
+     * Triggers slide validation after an input changes.
+     */
+    setupInputChangeListeners() {
+        // Use event delegation on the container to catch all input changes
+        const container = document.querySelector(this.options.containerSelector)
+        if (!container) return
+
+        // Listen for input events (fires as the user types)
+        container.addEventListener('input', (event) => {
+            const input = event.target
+
+            // Handle all input types
+            if (
+                input.tagName === 'INPUT' ||
+                input.tagName === 'TEXTAREA' ||
+                input.tagName === 'SELECT'
+            ) {
+                // Update the form data
+                this.updateFormData(input)
+
+                // Check for and clear any input errors
+                if (
+                    input.classList.contains('fc-error') ||
+                    input.classList.contains('error')
+                ) {
+                    if (input.value.trim() !== '') {
+                        // Clear the error specifically on this input
+                        this.clearInputError(input)
+
+                        // Also clear parent content error if appropriate
+                        const contentElement =
+                            input.closest('[data-fc-content]')
+                        if (
+                            contentElement &&
+                            contentElement.classList.contains(
+                                this.options.errorClass
+                            )
+                        ) {
+                            contentElement.classList.remove('error')
+                        }
+
+                        this.formChippy.debug.info(
+                            'Input value entered, cleared error state'
+                        )
+                    }
+                } else {
+                    // Handle nested Webflow input structure
+                    // Check if the input is inside a field element
+                    const fieldElement = input.closest(
+                        '[data-fc-element="field"]'
+                    )
+                    if (
+                        fieldElement &&
+                        (fieldElement.classList.contains('fc-error') ||
+                            fieldElement.classList.contains('error'))
+                    ) {
+                        if (input.value.trim() !== '') {
+                            // Clear the error on the field element
+                            this.clearInputError(fieldElement)
+
+                            // Also clear parent content error if appropriate
+                            const contentElement =
+                                fieldElement.closest('[data-fc-content]')
+                            if (
+                                contentElement &&
+                                contentElement.classList.contains(
+                                    this.options.errorClass
+                                )
+                            ) {
+                                contentElement.classList.remove('error')
+                            }
+
+                            // this.formChippy.debug.info( 'Input value entered in field element, cleared error state' )
+                        }
+                    }
                 }
             }
-            
-            // Find the parent content element for error display
-            // First check if all radios share a common parent with data-fc-input-group
-            let contentElement = null;
-            const firstRadio = radiosInGroup[0];
-            
-            this.formChippy.debug.info(`Finding parent content element for group '${groupName}'`);
-            
-            const radioParent = firstRadio.closest('[data-fc-question]') || 
-                               firstRadio.closest('[data-fc-content]');
-            
-            if (radioParent) {
-                contentElement = radioParent.closest('[data-fc-content]') || radioParent;
-                this.formChippy.debug.info(`Found parent element for group '${groupName}': ${contentElement ? contentElement.tagName : 'None'}`);
-            } else {
-                this.formChippy.debug.warn(`No parent element found for group '${groupName}'`);
+        })
+
+        // Listen for change events (fires when input loses focus or radio/checkbox clicked)
+        container.addEventListener('change', (event) => {
+            const input = event.target
+
+            // Special handling for radio buttons
+            if (input.type === 'radio') {
+                // 1. Update form data for the radio button itself (only if checked)
+                this.updateFormData(input)
+
+                // --- Update Associated Inputs in RadioFields ---
+                // When a radio changes, we must explicitly update the data state
+                // for ALL inputs within ANY radiofield belonging to this group.
+                const groupName = input.name
+                const slideElement = input.closest('[data-fc-slide]')
+                if (slideElement && groupName) {
+                    const radiosInGroup = slideElement.querySelectorAll(
+                        `input[type="radio"][name="${groupName}"]`
+                    )
+                    radiosInGroup.forEach((radioInGroup) => {
+                        const radioFieldWrapper = radioInGroup.closest(
+                            '[data-fc-element="radiofield"]'
+                        )
+                        if (radioFieldWrapper) {
+                            const associatedInputs =
+                                radioFieldWrapper.querySelectorAll(
+                                    'input:not([type="radio"]), textarea, select'
+                                )
+                            associatedInputs.forEach((associatedInput) => {
+                                this.formChippy.debug.info(
+                                    `Triggering updateFormData for associated input '${associatedInput.name || associatedInput.dataset.fcInput}' due to radio '${groupName}' change.`
+                                )
+                                this.updateFormData(associatedInput) // This will check the radio's state
+                            })
+                        }
+                    })
+                } else {
+                    this.formChippy.debug.warn(
+                        `Could not find slide or group name to update associated radiofield inputs for:`,
+                        input
+                    )
+                }
+                // ---------------------------------------------
+
+                // 2. Update form data for inputs within the *related* radiofields
+                if (input.checked && input.name) {
+                    // Find all radios in the same group within this slide
+                    const groupName = input.name
+                    const radiosInGroup = slide.querySelectorAll(
+                        `input[type="radio"][name="${groupName}"]`
+                    )
+
+                    this.formChippy.debug.info(
+                        `Radio '${input.value}' changed. Updating related radiofield inputs for group '${groupName}'.`
+                    )
+
+                    radiosInGroup.forEach((radioInGroup) => {
+                        const radioFieldWrapper = radioInGroup.closest(
+                            '[data-fc-element="radiofield"]'
+                        )
+                        if (radioFieldWrapper) {
+                            const associatedInputs =
+                                radioFieldWrapper.querySelectorAll(
+                                    'input:not([type="radio"]), textarea, select'
+                                )
+                            associatedInputs.forEach((associatedInput) => {
+                                // Call updateFormData for the associated input.
+                                // This will add/update its value if its radio is checked,
+                                // or remove it if its radio is now unchecked.
+                                this.formChippy.debug.info(
+                                    `  - Triggering updateFormData for associated input '${
+                                        associatedInput.name || 'unnamed'
+                                    }' (parent radio: '${radioInGroup.value}')`
+                                )
+                                this.updateFormData(associatedInput)
+                            })
+                        }
+                    })
+                }
+
+                // 3. Clear potential group-level error message (visual only)
+                const group = input.closest('[data-fc-input-group]')
+                if (group) {
+                    const contentElement = group.closest('[data-fc-content]')
+                    if (
+                        contentElement &&
+                        contentElement.classList.contains(
+                            this.options.errorClass
+                        )
+                    ) {
+                        this.clearInputError(group) // Use group context for message span
+                        this.formChippy.debug.info(
+                            `Radio selection made for group '${input.name}', cleared visual group error message.`
+                        )
+                    }
+                }
             }
-            
-            if (!isChecked) {
-                this.formChippy.debug.info(`Group '${groupName}' validation failed - no option selected`);
-                
-                // Use the unified error handling function with group-specific message
-                this.toggleContentError(groupRadioEl, true, `Please select an option for ${groupName}`);
-                
-                allGroupsValid = false; // Mark as invalid if any group fails
-                this.formChippy.debug.info(`Marking validation as failed for group '${groupName}'`);
-            } else {
-                this.formChippy.debug.info(`Group '${groupName}' validation passed - option selected`);
-                
-                // Use the unified error handling function to clear errors
-                this.toggleContentError(groupRadioEl, false);
-                
-                this.formChippy.debug.info(`Cleared any error state for group '${groupName}'`);
+            // Handle change events for non-radio inputs
+            else if (
+                input.tagName === 'INPUT' ||
+                input.tagName === 'TEXTAREA' ||
+                input.tagName === 'SELECT'
+            ) {
+                // 1. Update the form data (includes logic for inputs inside radiofields)
+                this.updateFormData(input)
+
+                // 2. Re-validate the input to give immediate feedback
+                //    Especially important for inputs inside *selected* radiofields.
+                const radioFieldWrapper = input.closest(
+                    '[data-fc-element="radiofield"]'
+                )
+                if (radioFieldWrapper) {
+                    const associatedRadio = radioFieldWrapper.querySelector(
+                        'input[type="radio"]'
+                    )
+                    // Only re-validate if the associated radio is actually checked
+                    if (associatedRadio && associatedRadio.checked) {
+                        this.formChippy.debug.info(
+                            `Re-validating input '${
+                                input.getAttribute('data-input') || input.name
+                            }' in selected radiofield on change.`
+                        )
+                        // Determine context for error message placement
+                        const fieldElement = input.closest(
+                            '[data-fc-element="field"]'
+                        ) // Check if it's inside a Webflow-style field
+                        const contextElement = fieldElement || input // Use field wrapper if available, otherwise the input itself
+                        this.validateInput(input, contextElement) // Call validation
+                    } else {
+                        this.formChippy.debug.info(
+                            `Input '${
+                                input.getAttribute('data-input') || input.name
+                            }' changed in a NON-selected radiofield, skipping immediate re-validation.`
+                        )
+                    }
+                } else {
+                    // For regular inputs not in radiofields, re-validate on change too
+                    this.formChippy.debug.info(
+                        `Re-validating standard input '${
+                            input.getAttribute('data-input') || input.name
+                        }' on change.`
+                    )
+                    const fieldElement = input.closest(
+                        '[data-fc-element="field"]'
+                    )
+                    const contextElement = fieldElement || input
+                    this.validateInput(input, contextElement)
+                }
             }
-        });
-        
-        this.formChippy.debug.info(`Radio group validation for slide ${slide.getAttribute('data-fc-slide')}: ${allGroupsValid ? 'Passed' : 'Failed'}`);
-        return allGroupsValid;
+        })
     }
 
     /**
@@ -1332,54 +1993,60 @@ class Validation {
      */
     showInputError(input, message) {
         // Log validation error
-        this.formChippy.debug.logValidation(input, false, message);
-        
+        this.formChippy.debug.logValidation(input, false, message)
+
         // Check if input is empty and add empty class if needed (only for standard inputs)
         if (input.matches('input, textarea, select')) {
             if (input.value.trim() === '') {
-                input.classList.add('fc-empty', 'empty');
+                input.classList.add('fc-empty', 'empty')
             } else {
-                input.classList.remove('fc-empty', 'empty');
+                input.classList.remove('fc-empty', 'empty')
             }
         }
-        
+
         // Handle group elements differently if needed
-        if (!input.matches('input, textarea, select')) { // Check if it's not a standard input
+        if (!input.matches('input, textarea, select')) {
+            // Check if it's not a standard input
             // Apply error styling/class to the group container itself or a specific child
-            input.classList.add('fc-error', 'error'); // Add error class to the group
+            input.classList.add('fc-error', 'error') // Add error class to the group
         } else {
-            input.style.borderColor = 'var(--fc-error-color, var(--mct-error-color, #ff3860))';
-            input.classList.add('fc-error', 'error');
+            input.style.borderColor =
+                'var(--fc-error-color, var(--mct-error-color, #ff3860))'
+            input.classList.add('fc-error', 'error')
         }
 
         // Find question container
-        const questionContainer = 
-            input.closest('[data-fc-question]') || input.closest('[data-fc-content]') || input.parentNode;
-        
+        const questionContainer =
+            input.closest('[data-fc-question]') ||
+            input.closest('[data-fc-content]') ||
+            input.parentNode
+
         // Add error class to the question container
-        questionContainer.classList.add('fc-has-error', 'has-error');
-        
+        questionContainer.classList.add('fc-has-error', 'has-error')
+
         // Content element error handling is now done by toggleContentError() method
-        
+
         // Only create error message if there's no custom error element
         if (!questionContainer.querySelector('[data-fc-content-error]')) {
             // Create error message
-            let errorElement = questionContainer.querySelector('.fc-error-message');
+            let errorElement =
+                questionContainer.querySelector('.fc-error-message')
             if (!errorElement) {
-                errorElement = document.createElement('div');
-                errorElement.className = 'fc-error-message';
-                errorElement.style.color = 'var(--fc-error-color, var(--mct-error-color, #ff3860))';
-                errorElement.style.fontSize = '0.875rem';
-                errorElement.style.marginTop = '-1rem';
-                errorElement.style.marginBottom = '1rem';
-                questionContainer.appendChild(errorElement);
+                errorElement = document.createElement('div')
+                errorElement.className = 'fc-error-message'
+                errorElement.style.color =
+                    'var(--fc-error-color, var(--mct-error-color, #ff3860))'
+                errorElement.style.fontSize = '0.875rem'
+                errorElement.style.marginTop = '-1rem'
+                errorElement.style.marginBottom = '1rem'
+                questionContainer.appendChild(errorElement)
             }
-            errorElement.textContent = message;
+            errorElement.textContent = message
         }
 
         // Focus the input only for standard inputs
         if (input.matches('input, textarea, select')) {
-            input.focus();
+            input.focus()
         }
     }
 
@@ -1390,66 +2057,68 @@ class Validation {
     clearInputError(input) {
         // Log validation success
         if (input.classList.contains('fc-error')) {
-            this.formChippy.debug.logValidation(input, true);
+            this.formChippy.debug.logValidation(input, true)
         }
-        
+
         // Handle group elements
         if (!input.matches('input, textarea, select')) {
-            input.classList.remove('fc-error', 'error'); // Remove error class from the group
+            input.classList.remove('fc-error', 'error') // Remove error class from the group
         } else {
-            input.style.borderColor = '';
-            input.classList.remove('fc-error', 'error');
+            input.style.borderColor = ''
+            input.classList.remove('fc-error', 'error')
         }
 
         // Check if input is empty and update empty class accordingly (only for standard inputs)
         if (input.matches('input, textarea, select')) {
             if (input.value.trim() === '') {
-                input.classList.add('fc-empty', 'empty');
+                input.classList.add('fc-empty', 'empty')
             } else {
-                input.classList.remove('fc-empty', 'empty');
+                input.classList.remove('fc-empty', 'empty')
             }
         }
 
         // Find question container
         const questionContainer =
-            input.closest('[data-fc-question]') || input.closest('[data-fc-content]') || input.parentNode;
-            
+            input.closest('[data-fc-question]') ||
+            input.closest('[data-fc-content]') ||
+            input.parentNode
+
         // Remove error class from question container
-        questionContainer.classList.remove('fc-has-error', 'has-error');
-        
+        questionContainer.classList.remove('fc-has-error', 'has-error')
+
         // Content element error handling is now done by toggleContentError() method
-        
+
         // Remove error message
         const errorElement =
-            questionContainer.querySelector('.fc-error-message');
+            questionContainer.querySelector('.fc-error-message')
         if (errorElement) {
-            errorElement.remove();
+            errorElement.remove()
         }
     }
-    
+
     /**
      * Get the whole form data as a JSON object, organized by slide ID
      * @returns {Object} Form data organized by slide ID
      */
     getFormData() {
-        return this.formData;
+        return this.formData
     }
-    
+
     /**
      * Get flattened form data (all slides combined in one object)
      * @returns {Object} Flattened form data
      */
     getFlatFormData() {
-        const flatData = {};
-        
+        const flatData = {}
+
         // Flatten the slide-based structure into a single object
         for (const slideId in this.formData) {
             for (const fieldName in this.formData[slideId]) {
-                flatData[fieldName] = this.formData[slideId][fieldName];
+                flatData[fieldName] = this.formData[slideId][fieldName]
             }
         }
-        
-        return flatData;
+
+        return flatData
     }
 }
 
@@ -4271,9 +4940,13 @@ class DateInput {
 
 
 /**
- * FormChippy.js v1.5.0
+ * FormChippy.js v1.5.1
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.5.1:
+ * - Fixed data storage logic for standard radio button groups.
+ * - Corrected data handling for inputs nested within radiofield elements.
  *
  * New in v1.5.0:
  * - Enhanced form validation system with hierarchical required/optional handling

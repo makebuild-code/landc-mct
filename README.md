@@ -159,7 +159,11 @@ Check out `nested-slides-example.html` in the examples directory for a complete 
 
 FormChippy provides a rich event system that you can use to integrate with your code:
 
-### Initialization Event
+### Initialization Event (FCinit Listener)
+
+The `formchippy:init` event is dispatched when FormChippy is fully initialized. This is useful for performing custom actions after FormChippy is ready:
+
+#### Basic Usage
 
 ```javascript
 // Listen for FormChippy initialization
@@ -170,9 +174,46 @@ document.addEventListener('formchippy:init', function(event) {
     // Check if this is the instance we want (when using multiple forms)
     if (formchippy.formName === 'my-form-name') {
         console.log('FormChippy initialized successfully!');
-        // Your code here
+        // Add code here
     }
 });
+```
+
+#### Advanced Usage
+
+```javascript
+// Listen for FormChippy initialization
+document.addEventListener('formchippy:init', function(event) {
+    // The FormChippy instance is available in the event detail
+    const formchippy = event.detail.instance;
+    
+    // Check if this is the instance we want (when using multiple forms)
+    if (formchippy.formName === 'my-form-name') {
+        console.log('FormChippy initialized successfully!');
+        
+        // Access form data or setup custom event handlers
+        formchippy.on('formDataUpdate', function(data) {
+            console.log('Form data updated:', data.formData);
+        });
+        
+        // Custom initialization logic
+        setupCustomFunctionality(formchippy);
+    }
+});
+
+// Example of custom functionality setup
+function setupCustomFunctionality(formchippy) {
+    // Add custom validation logic
+    formchippy.addCustomValidation('some-slide-id', function(slideElement) {
+        // Your custom validation logic here
+        return true; // or false to prevent navigation
+    });
+    
+    // Reset the form to initial state
+    document.querySelector('#reset-button').addEventListener('click', function() {
+        formchippy.reset();
+    });
+}
 ```
 
 ### Slide Change Event
@@ -185,6 +226,72 @@ const formchippy = window.FormChippy.getInstance('my-form-name');
 formchippy.on('slideChange', function(data) {
     console.log(`Navigated to slide: ${data.currentSlideIndex}`);
     // Your code here
+});
+```
+
+## Form Data Collection
+
+FormChippy automatically collects form data as users navigate through the form. The data is structured as a JSON object, making it easy to process and submit.
+
+### Form Data Structure
+
+The form data is organized by slide ID, with each slide containing its input values:
+
+```javascript
+// Example of the formData JSON structure
+{
+  "intro": {
+    "userName": "John Doe"
+  },
+  "contact-info": {
+    "email": "john@example.com",
+    "phone": "555-123-4567"
+  },
+  "preferences": {
+    "favoriteColor": "blue",
+    "newsletter": true
+  }
+}
+```
+
+### Accessing Form Data
+
+You can access the form data through the FormChippy instance at any time:
+
+```javascript
+// Get the FormChippy instance
+const formchippy = window.FormChippy.getInstance('my-form-name');
+
+// Get the current form data
+const formData = formchippy.getFormData();
+console.log('Current form data:', formData);
+
+// Listen for form data updates
+formchippy.on('formDataUpdate', function(data) {
+    console.log('Form data updated:', data.formData);
+    // Process or validate the data as needed
+});
+
+// Submit the form data
+document.querySelector('[data-fc-button="submit"]').addEventListener('click', function() {
+    const formData = formchippy.getFormData();
+    
+    // Example: Send data to server
+    fetch('/api/submit-form', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        formchippy.goToSlide('thank-you-slide');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 });
 ```
 

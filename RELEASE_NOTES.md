@@ -1,3 +1,14 @@
+# FormChippy v1.5.1 Release Notes
+
+## Bug Fixes
+- Corrected data storage for standard radio button groups to use the group `name` as the key and the selected radio's `value` as the value (e.g., `{ "groupName": "selectedValue" }`), ensuring only the latest selection is stored.
+- Fixed data handling for inputs nested within `[data-fc-element="radiofield"]` elements:
+    - Ensured nested input data is correctly added/updated when the associated radio is selected.
+    - Ensured nested input data is correctly removed when the associated radio becomes unselected.
+- Added logic to `setupInputChangeListeners` to explicitly trigger updates for nested inputs in all related radiofields when a radio button selection changes.
+
+---
+
 # FormChippy v1.5.0 Release Notes
 
 ## Enhanced Form Validation System
