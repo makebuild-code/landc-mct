@@ -1,5 +1,9 @@
 # FormChippy
 
+[![Latest Release](https://img.shields.io/github/v/tag/jpthedio/formchippy?label=version)](https://github.com/jpthedio/formchippy/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub stars](https://img.shields.io/github/stars/jpthedio/formchippy?style=social)](https://github.com/jpthedio/formchippy/stargazers)
+
 A lightweight, customizable multi-step form library built with vanilla JavaScript. FormChippy makes it easy to create interactive, vertical scrolling multi-slide forms with validation, progress tracking, and smooth transitions.
 
 ## Features
