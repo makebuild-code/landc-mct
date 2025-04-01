@@ -1,3 +1,15 @@
+# FormChippy v1.5.2 Release Notes
+
+## Enhancements
+- **Real-time Validation Feedback**: Validation now runs on the `input` event for text-based fields (text, number, textarea, select) and `change` for clicks (radio, checkbox), providing immediate visual feedback as the user interacts with the form. This uses the existing `validateSlide()` logic but triggers it more frequently.
+- **LocalStorage Mirroring**: When data persistence (`sessionStorage` or `localStorage`) is enabled, the internal `this.formData` object is now also stored as a JSON string under the key `formchippy-<formName>-json` in `localStorage`. This provides an easily accessible, human-readable view of the collected data for debugging purposes, regardless of the chosen persistence method.
+
+## Bug Fixes
+- (Inherited from v1.5.1) Corrected data storage for standard radio button groups to use the group `name` as the key and the selected radio's `value` as the value.
+- (Inherited from v1.5.1) Fixed data handling for inputs nested within `[data-fc-element="radiofield"]` elements.
+
+---
+
 # FormChippy v1.5.1 Release Notes
 
 ## Bug Fixes

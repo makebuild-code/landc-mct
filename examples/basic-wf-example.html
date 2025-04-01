@@ -339,8 +339,197 @@
                 color: #e74c3c;
             }
         </style>
+        <!-- FormChippy Monitor Panel Styles -->
+        <style>
+            /* FormChippy Monitor Panel */
+            #fc-monitor-panel {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 350px;
+                max-height: 500px;
+                background-color: #fff;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                z-index: 9999;
+                overflow: hidden;
+                transition: transform 0.3s ease, opacity 0.3s ease;
+                font-family: monospace;
+                font-size: 12px;
+            }
+
+            #fc-monitor-panel.collapsed {
+                transform: translateY(calc(100% - 40px));
+            }
+
+            #fc-monitor-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 15px;
+                background-color: #3498db;
+                color: white;
+                cursor: pointer;
+                font-weight: bold;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                    Roboto, Arial, sans-serif;
+                font-size: 14px;
+            }
+
+            #fc-monitor-body {
+                padding: 15px;
+                overflow-y: auto;
+                max-height: 450px;
+            }
+
+            #fc-form-list {
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .fc-form-item {
+                margin-bottom: 15px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .fc-form-name {
+                font-weight: bold;
+                margin-bottom: 5px;
+                color: #3498db;
+            }
+
+            .fc-form-data {
+                background-color: #f8f9fa;
+                border-radius: 4px;
+                padding: 10px;
+                overflow: auto;
+                max-height: 200px;
+            }
+
+            .fc-form-data pre {
+                margin: 0;
+                white-space: pre-wrap;
+            }
+
+            .fc-slide-data {
+                margin-top: 5px;
+                padding-left: 10px;
+                border-left: 2px solid #eee;
+            }
+
+            .fc-slide-id {
+                font-weight: bold;
+                color: #555;
+            }
+
+            .fc-field-data {
+                display: flex;
+                margin: 2px 0;
+            }
+
+            .fc-field-name {
+                flex: 0 0 120px;
+                color: #777;
+            }
+
+            .fc-field-value {
+                flex: 1;
+                word-break: break-word;
+            }
+
+            /* Toggle button styling */
+            #fc-monitor-toggle {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 16px;
+                cursor: pointer;
+                padding: 0;
+            }
+
+            .form-data-updated {
+                animation: highlight 1s ease;
+            }
+
+            @keyframes highlight {
+                0% {
+                    background-color: rgba(255, 235, 59, 0.3);
+                }
+                100% {
+                    background-color: transparent;
+                }
+            }
+        </style>
     </head>
     <body>
+        <!-- Saved Form Data Controls and Display -->
+        <div
+            class="form-data-controls"
+            style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                background: #f8f8f8;
+                padding: 10px;
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                max-width: 320px;
+            "
+        >
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <button
+                    id="clearFormData"
+                    style="
+                        background: #ff5252;
+                        color: white;
+                        border: none;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                    "
+                >
+                    Clear Saved Form Data
+                </button>
+                <button
+                    id="toggleDataDisplay"
+                    style="
+                        background: #2196f3;
+                        color: white;
+                        border: none;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        margin-left: 8px;
+                    "
+                >
+                    Show Form Data
+                </button>
+            </div>
+            <div
+                id="formDataStatus"
+                style="margin-top: 5px; font-size: 12px"
+            ></div>
+            <div 
+                id="formDataDisplay"
+                style="
+                    margin-top: 10px;
+                    background: #fff;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    padding: 8px;
+                    max-height: 300px;
+                    overflow-y: auto;
+                    font-family: monospace;
+                    font-size: 12px;
+                    display: none;
+                "
+            ></div>
+        </div>
+
         <div class="container">
             <h1>FormChippy Demo</h1>
 
@@ -360,6 +549,7 @@
 
             <!-- FormChippy Form -->
             <div
+                id="myForm"
                 data-fc-container="demo-form"
                 data-fc-debuglog="true"
                 data-fc-validate="false"
@@ -1160,22 +1350,164 @@
             </div>
         </div>
 
-        <!-- Finsweet Attributes Input Active Class for Webflow radio buttons -->
-        <script>
-            ;(() => {
-                var t =
-                        'https://cdn.jsdelivr.net/npm/@finsweet/attributes-inputactive@1/inputactive.js',
-                    e = document.querySelector(`script[src="${t}"]`)
-                e ||
-                    ((e = document.createElement('script')),
-                    (e.async = !0),
-                    (e.src = t),
-                    document.head.append(e))
-            })()
-        </script>
-
         <!-- FormChippy Script - Just include the library and it auto-initializes -->
         <script type="module" src="../dist/formchippy.js"></script>
+
+        <!-- Script to manually add form data to global window.FormChippy.forms object -->
+        <script>
+            // Initialize the forms object if it doesn't exist
+            if (!window.FormChippy) {
+                window.FormChippy = {}
+            }
+            if (!window.FormChippy.forms) {
+                window.FormChippy.forms = {}
+            }
+
+            // Listen for when FormChippy is fully initialized
+            document.addEventListener('formchippy:init', function (event) {
+                console.log('%c[FormChippy] Form Initialized', 'color: #4caf50; font-weight: bold;')
+                console.log('Form Name:', event.detail.name)
+
+                if (event.detail && event.detail.name === 'demo-form') {
+                    const instance = event.detail.instance
+
+                    // Convert kebab-case to camelCase
+                    const formName = 'demoForm'
+
+                    // Add this form to the global object
+                    window.FormChippy.forms[formName] = {
+                        instance: instance,
+                        formData: instance.getFormData(),
+                    }
+                    
+                    // Display form data nicely in console
+                    console.log('%c[FormChippy] Form Data', 'color: #2196f3; font-weight: bold;')
+                    console.table(instance.getFormData())
+                    
+                    // Check if we have localStorage data
+                    const storageKey = 'formchippy_data_' + event.detail.name
+                    if (localStorage.getItem(storageKey)) {
+                        console.log('%c[FormChippy] LocalStorage Data', 'color: #ff9800; font-weight: bold;')
+                        console.table(JSON.parse(localStorage.getItem(storageKey)))
+                    }
+
+                    console.log('Added to window.FormChippy.forms:', formName)
+                    console.log(
+                        'You can access it with: window.FormChippy.forms.demoForm'
+                    )
+                    
+                    // Add global helper functions to show form data
+                    window.showFormData = function() {
+                        console.log('%c[FormChippy] Current Form Data', 'color: #2196f3; font-weight: bold;')
+                        console.table(instance.getFormData())
+                        return 'Use window.FormChippy.forms.demoForm to access the form object'
+                    }
+                    
+                    // Set up data display panel toggle
+                    const toggleBtn = document.getElementById('toggleDataDisplay');
+                    const dataDisplay = document.getElementById('formDataDisplay');
+                    if (toggleBtn && dataDisplay) {
+                        // Initial update
+                        updateFormDataDisplay();
+                        
+                        // Add click handler for toggle button
+                        toggleBtn.addEventListener('click', function() {
+                            if (dataDisplay.style.display === 'none') {
+                                dataDisplay.style.display = 'block';
+                                toggleBtn.textContent = 'Hide Form Data';
+                                toggleBtn.style.background = '#ff9800';
+                                updateFormDataDisplay(); // Make sure data is current
+                            } else {
+                                dataDisplay.style.display = 'none';
+                                toggleBtn.textContent = 'Show Form Data';
+                                toggleBtn.style.background = '#2196f3';
+                            }
+                        });
+                        
+                        // Listen for form data changes
+                        document.addEventListener('formchippy:dataUpdate', function(event) {
+                            if (event.detail && event.detail.formName === 'demo-form') {
+                                updateFormDataDisplay();
+                            }
+                        });
+                        
+                        // Function to update the data display panel
+                        function updateFormDataDisplay() {
+                            if (dataDisplay.style.display === 'none') return;
+                            
+                            const formData = instance.getFormData();
+                            let html = '<h4 style="margin-top: 0;">Current Form Data:</h4>';
+                            
+                            // Show form name
+                            html += `<div style="margin-bottom: 8px;"><strong>Form Name:</strong> <span style="color:#ff9800;">${instance.formName}</span></div>`;
+                            
+                            // Format the data as a readable tree
+                            html += '<ul style="padding-left: 20px; margin: 0;">';
+                            for (const slideId in formData) {
+                                html += `<li><strong>${slideId}</strong>:`;
+                                html += '<ul style="padding-left: 20px;">';
+                                for (const fieldName in formData[slideId]) {
+                                    const value = formData[slideId][fieldName];
+                                    html += `<li><span style="color:#2196f3;">${fieldName}</span>: <span style="color:#4caf50;">${value}</span></li>`;
+                                }
+                                html += '</ul></li>';
+                            }
+                            html += '</ul>';
+                            
+                            // Add LocalStorage data if available
+                            const storageKey = 'formchippy_data_' + instance.formName;
+                            const savedData = localStorage.getItem(storageKey);
+                            if (savedData) {
+                                html += '<h4>Saved in LocalStorage:</h4>';
+                                html += `<div style="word-break: break-all; font-size: 11px; color: #666;">${storageKey}</div>`;
+                                
+                                // Show the actual saved data
+                                try {
+                                    const parsedData = JSON.parse(savedData);
+                                    html += '<div style="margin-top: 5px; font-size: 12px;">';
+                                    html += JSON.stringify(parsedData, null, 2)
+                                        .replace(/\n/g, '<br>')
+                                        .replace(/ /g, '&nbsp;');
+                                    html += '</div>';
+                                } catch (e) {
+                                    html += '<div>Error parsing saved data</div>';
+                                }
+                            }
+                            
+                            // List all FormChippy forms in localStorage
+                            html += '<h4>All Saved Forms:</h4>';
+                            const formNames = [];
+                            for (let i = 0; i < localStorage.length; i++) {
+                                const key = localStorage.key(i);
+                                if (key && key.startsWith('formchippy_data_')) {
+                                    const formName = key.replace('formchippy_data_', '');
+                                    if (!formNames.includes(formName)) {
+                                        formNames.push(formName);
+                                    }
+                                }
+                            }
+                            
+                            if (formNames.length > 0) {
+                                html += '<ul>';
+                                formNames.forEach(name => {
+                                    const isCurrent = name === instance.formName;
+                                    html += `<li>${name} ${isCurrent ? '(current)' : ''}</li>`;
+                                });
+                                html += '</ul>';
+                            } else {
+                                html += '<div>No forms saved in localStorage</div>';
+                            }
+                            
+                            dataDisplay.innerHTML = html;
+                            dataDisplay.classList.add('form-data-updated');
+                            setTimeout(() => {
+                                dataDisplay.classList.remove('form-data-updated');
+                            }, 1000);
+                        }
+                    }
+                }
+            })
+        </script>
 
         <!-- Progress Fraction is now fully handled by the FormChippy library
              - Uses data-fc-progress-fraction-container for the container
@@ -1237,35 +1569,96 @@
 
                     updateMonitor() // Initial update
 
-                    // Set up the mutation observer
-                    const observer = new MutationObserver((mutations) => {
-                        mutations.forEach((mutation) => {
+                    // --- Wait for the specific FormChippy instance to initialize ---
+                    document.addEventListener(
+                        'formchippy:init',
+                        function (event) {
+                            // Check if this is the instance we are interested in
                             if (
-                                mutation.type === 'attributes' &&
-                                mutation.attributeName === 'style'
+                                event.detail &&
+                                event.detail.name === 'demo-form'
                             ) {
-                                const styles = {
-                                    overflowY: slideList.style.overflowY,
-                                    scrollBehavior:
-                                        slideList.style.scrollBehavior,
-                                    width: slideList.style.width,
-                                    timestamp: new Date()
-                                        .toISOString()
-                                        .substr(11, 12), // Time in HH:MM:SS.mmm format
+                                console.log(
+                                    'FormChippy instance "demo-form" initialized.'
+                                )
+                                const fcInstance = event.detail.instance // Get instance from event
+
+                                if (fcInstance) {
+                                    console.log(
+                                        'Initial Form Data (via init event):',
+                                        fcInstance.formData
+                                    )
+
+                                    // --- Setup MutationObserver only AFTER initialization ---
+                                    const slideList = document.querySelector(
+                                        '[data-fc-slide-list]'
+                                    ) // Make sure slideList is defined here
+                                    const progressFill = document.querySelector(
+                                        '[data-fc-progress-fill]'
+                                    ) // Assuming this exists
+
+                                    if (slideList && progressFill) {
+                                        const observer = new MutationObserver(
+                                            (mutations) => {
+                                                mutations.forEach(
+                                                    (mutation) => {
+                                                        if (
+                                                            mutation.type ===
+                                                                'attributes' &&
+                                                            (mutation.target ===
+                                                                progressFill ||
+                                                                mutation.attributeName ===
+                                                                    'style') // Observe progress fill or general style changes
+                                                        ) {
+                                                            // Update donut and monitor
+                                                            updateDonutProgress()
+                                                            updateMonitor()
+
+                                                            // --- Log Form Data using the instance ---
+                                                            console.log(
+                                                                'Form Data after change (via init event):',
+                                                                fcInstance.formData // Use the instance we got from the event
+                                                            )
+                                                            // --- End Log Form Data ---
+                                                        }
+                                                    }
+                                                )
+                                            }
+                                        )
+
+                                        // Start observing the progress bar fill element for attribute changes
+                                        observer.observe(progressFill, {
+                                            attributes: true,
+                                            attributeFilter: ['style', 'width'], // Be specific about what to watch
+                                        })
+                                        console.log(
+                                            'MutationObserver started for progress fill.'
+                                        )
+                                    } else {
+                                        console.error(
+                                            'Could not find slideList or progressFill to set up MutationObserver.'
+                                        )
+                                    }
+                                    // --- End Setup MutationObserver ---
+                                } else {
+                                    console.error(
+                                        'Instance provided in formchippy:init event was invalid.'
+                                    )
                                 }
-
-                                console.log('STYLE CHANGED:', styles)
-                                updateMonitor()
+                            } else {
+                                // Log if another instance initialized (optional)
+                                if (event.detail) {
+                                    console.log(
+                                        `FormChippy instance "${event.detail.name}" initialized (ignored by this script).`
+                                    )
+                                }
                             }
-                        })
-                    })
+                        }
+                    )
+                    // --- End Wait for Initialization ---
 
-                    // Observe style attribute changes
-                    observer.observe(slideList, {
-                        attributes: true,
-                        attributeFilter: ['style'],
-                    })
-                    console.log('Style observer attached to slide list')
+                    // (Keep the donut progress update logic outside the listener if it needs to run immediately)
+                    updateDonutProgress() // Initial donut update based on initial HTML state
 
                     // Also log clicks on navigation buttons to track user actions
                     const navButtons =
@@ -1282,6 +1675,244 @@
                         })
                     })
                 }, 500) // Wait for FormChippy to fully initialize
+            })
+        </script>
+
+        <script>
+            // --- Define updateDonutProgress in a scope accessible by the observer ---
+            const updateDonutProgress = (
+                percentage,
+                donutFillElement,
+                donutTextElement
+            ) => {
+                if (!donutFillElement || !donutTextElement) return
+                const angle = (percentage / 100) * 360
+                // Update text first (less complex)
+                donutTextElement.textContent = `${Math.round(percentage)}%`
+
+                // Update the clip-path based on percentage
+                if (percentage <= 0) {
+                    donutFillElement.style.clipPath =
+                        'polygon(50% 50%, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%)' // Center dot
+                } else if (percentage < 50) {
+                    const rad = (angle * Math.PI) / 180
+                    const x = 50 + 50 * Math.tan(rad)
+                    donutFillElement.style.clipPath = `polygon(50% 50%, 50% 0%, ${x}% 0%, ${x}% 0%, ${x}% 0%, ${x}% 0%)`
+                } else if (percentage === 50) {
+                    donutFillElement.style.clipPath =
+                        'polygon(50% 50%, 50% 0%, 100% 0%, 100% 50%, 100% 50%, 100% 50%)' // Half circle
+                } else if (percentage < 100) {
+                    const rad = ((angle - 90) * Math.PI) / 180
+                    const y = 50 + 50 * Math.tan(rad)
+                    donutFillElement.style.clipPath = `polygon(50% 50%, 50% 0%, 100% 0%, 100% ${y}%, 100% ${y}%, 100% ${y}%)`
+                } else {
+                    // 100% or more
+                    donutFillElement.style.clipPath =
+                        'polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%)' // Full circle
+                }
+                // Apply rotation for smooth transition
+                donutFillElement.style.transform = `rotate(${angle}deg)`
+
+                console.log(`DEBUG: Donut progress updated to ${percentage}%`)
+            }
+            // -------------------------------------------------------------------------
+
+            document.addEventListener('formchippy:init', function (event) {
+                console.log(
+                    `DEBUG: formchippy:init fired for ${event.detail.name}`
+                )
+
+                // Check if this is the form instance we care about
+                if (event.detail && event.detail.name === 'demo-form') {
+                    const fcInstance = event.detail.instance
+                    console.log('DEBUG: Instance found:', fcInstance)
+                    console.log(
+                        'DEBUG: Current formData:',
+                        fcInstance.getFormData()
+                    )
+
+                    // Get Donut elements
+                    const donutFill =
+                        document.getElementById('donutProgressFill')
+                    const donutText =
+                        document.getElementById('donutProgressText')
+
+                    // Get the target progress bar fill element
+                    const progressBarFill = document.querySelector(
+                        '[data-fc-progress-fill]'
+                    )
+
+                    if (progressBarFill && donutFill && donutText) {
+                        console.log(
+                            'DEBUG: Donut and progress bar elements found. Setting up observer.'
+                        )
+
+                        // Initial sync
+                        const initialWidth =
+                            parseFloat(progressBarFill.style.width) || 0
+                        updateDonutProgress(initialWidth, donutFill, donutText) // Call the globally defined function
+                        console.log(
+                            `DEBUG: Initial donut sync: ${initialWidth}%`
+                        )
+
+                        // Create a MutationObserver to watch for style changes on the progress bar fill
+                        const observer = new MutationObserver(
+                            (mutationsList) => {
+                                for (const mutation of mutationsList) {
+                                    if (
+                                        mutation.type === 'attributes' &&
+                                        mutation.attributeName === 'style'
+                                    ) {
+                                        const newWidth =
+                                            parseFloat(
+                                                progressBarFill.style.width
+                                            ) || 0
+                                        console.log(
+                                            `DEBUG: Progress bar style changed. New width: ${newWidth}%`
+                                        )
+                                        // Update the donut progress when the bar changes
+                                        updateDonutProgress(
+                                            newWidth,
+                                            donutFill,
+                                            donutText
+                                        ) // Call the globally defined function
+                                    }
+                                }
+                            }
+                        )
+
+                        // Start observing the progress bar fill for attribute changes (specifically style)
+                        observer.observe(progressBarFill, { attributes: true })
+                        console.log(
+                            'DEBUG: MutationObserver started for progress bar fill.'
+                        )
+                    } else {
+                        console.error(
+                            'DEBUG: Could not find necessary progress elements for observer setup.'
+                        )
+                    }
+                } else {
+                    console.log(
+                        `DEBUG: Ignoring init event for ${
+                            event.detail
+                                ? event.detail.name
+                                : 'unknown instance'
+                        }`
+                    )
+                }
+            })
+
+            // Optional: Log when DOMContentLoaded fires for timing comparison
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DEBUG: DOMContentLoaded fired')
+
+                // Set up the Clear Form Data button
+                const clearButton = document.getElementById('clearFormData')
+                const statusDiv = document.getElementById('formDataStatus')
+
+                if (clearButton && statusDiv) {
+                    // Check if there's saved form data
+                    updateFormDataStatus()
+
+                    // Add event listener to clear button
+                    clearButton.addEventListener('click', function () {
+                        // Ask user if they want to clear current form or all forms
+                        const clearAll = confirm('Clear data for ALL forms? Click OK for all forms, or Cancel to clear only the current form (demo-form).')
+                        
+                        if (clearAll) {
+                            // Clear all FormChippy data from localStorage
+                            clearAllFormData()
+                            statusDiv.innerHTML = '<span style="color:#4caf50">All form data cleared!</span>'
+                        } else {
+                            // Clear only current form data
+                            clearFormData('demo-form')
+                            statusDiv.innerHTML = '<span style="color:#4caf50">Form "demo-form" data cleared!</span>'
+                        }
+
+                        // Reset status after 3 seconds
+                        setTimeout(() => {
+                            updateFormDataStatus()
+                        }, 3000)
+                        
+                        // Reload page to reset form state
+                        setTimeout(() => {
+                            window.location.reload()
+                        }, 1000)
+                    })
+                }
+
+                // Function to clear all FormChippy data
+                function clearAllFormData() {
+                    // Find and remove all FormChippy related localStorage items
+                    const keysToRemove = []
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i)
+                        if (
+                            key &&
+                            (key.startsWith('formchippy_data_') ||
+                                key.startsWith('formchippy_expires_'))
+                        ) {
+                            keysToRemove.push(key)
+                        }
+                    }
+
+                    // Remove all matching keys
+                    keysToRemove.forEach((key) => localStorage.removeItem(key))
+                    console.log(
+                        `Cleared ${keysToRemove.length} FormChippy items from localStorage`
+                    )
+
+                    return keysToRemove.length
+                }
+                
+                // Function to clear a specific form's data
+                function clearFormData(formName) {
+                    if (!formName) return 0
+                    
+                    const dataKey = 'formchippy_data_' + formName
+                    const expiryKey = 'formchippy_expires_' + formName
+                    
+                    let count = 0
+                    if (localStorage.getItem(dataKey)) {
+                        localStorage.removeItem(dataKey)
+                        count++
+                    }
+                    
+                    if (localStorage.getItem(expiryKey)) {
+                        localStorage.removeItem(expiryKey)
+                        count++
+                    }
+                    
+                    console.log(`Cleared ${count} items for form: ${formName}`)
+                    return count
+                }
+                
+                // Function to update the status message
+                function updateFormDataStatus() {
+                    // Get all unique form names with saved data
+                    const formNames = []
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i)
+                        if (key && key.startsWith('formchippy_data_')) {
+                            const formName = key.replace('formchippy_data_', '')
+                            if (!formNames.includes(formName)) {
+                                formNames.push(formName)
+                            }
+                        }
+                    }
+                    
+                    if (formNames.length > 0) {
+                        let html = `<span style="color:#4caf50">${formNames.length} form(s) with saved data:</span><br>`
+                        formNames.forEach(name => {
+                            // Mark current form
+                            const isCurrent = name === 'demo-form' ? ' (current)' : ''
+                            html += `<span style="color:#2196f3">- ${name}${isCurrent}</span><br>`
+                        })
+                        statusDiv.innerHTML = html
+                    } else {
+                        statusDiv.innerHTML = '<span style="color:#999">No saved form data</span>'
+                    }
+                }
             })
         </script>
     </body>

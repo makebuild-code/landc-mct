@@ -1,19 +1,29 @@
 /**
- * FormChippy.js v1.5.1
+ * FormChippy.js v1.5.2
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
  *
- * New in v1.5.1:
+ * New in v1.5.2:
+ * - Enhanced validation for immediate feedback on input/change
+ * - Updated form data is now also stored in local storage as JSON
  * - Fixed data storage logic for standard radio button groups.
  * - Corrected data handling for inputs nested within radiofield elements.
  *
+ * New in v1.5.1:
+ * - Refactored initialization and event handling
+ *
  * New in v1.5.0:
+ * - Introduced Debug module for enhanced troubleshooting
  * - Enhanced form validation system with hierarchical required/optional handling
  * - Added support for 'data-fc-required="false"' at multiple DOM levels (slide, content, field, etc.)
  * - Unified error handling with consistent application of error classes to content elements
  * - Improved debug logging throughout the validation process
  *
+ * New in v1.4.1:
+ * - Fixed bug where reset button didn't clear storage
+ *
  * New in v1.4.0:
+ * - Added data persistence options (sessionStorage, localStorage, none)
  * - Support for slides at any nesting level within the slide-list element
  * - Automatic filtering of slides with hidden ancestors (display:none)
  * - Improved slide detection regardless of DOM structure depth
@@ -28,8 +38,9 @@
  * - Percentage-based scroll positioning (e.g., data-fc-slide-position="25%")
  * - Improved overflow control to prevent scrolling after slide navigation
  *
- * @license MIT
- * @author JP Dionisio
+ * @version     1.5.2
+ * @license     MIT
+ * @author      JP Dionisio
  * Copyright (c) 2025 JP Dionisio
  */
 
@@ -41,6 +52,7 @@ import { DonutProgress } from './core/donut-progress.js'
 import { DynamicSlides } from './core/dynamic-slides.js'
 import { InputActive } from './core/inputactive.js'
 import { Debug } from './core/debug.js'
+import { Persistence } from './core/persistence.js'
 
 // Import question types
 import { TextInput } from './questions/text.js'
@@ -51,6 +63,9 @@ import { TextareaInput } from './questions/textarea.js'
 import { DateInput } from './questions/date.js'
 
 class FormChippy {
+    // Static property to hold all instances
+    static instances = {};
+
     constructor(options = {}) {
         // Default options
         this.options = {
@@ -91,6 +106,7 @@ class FormChippy {
         this.dynamicSlides = null
         this.inputActive = null
         this.debug = null
+        this.persistence = null
         this.questionHandlers = {}
 
         // Initialize
@@ -179,6 +195,8 @@ class FormChippy {
 
         this.formName =
             this.container.getAttribute('data-fc-container') || 'form'
+            
+        console.log(`FormChippy: Initializing form with name: ${this.formName}`)
 
         // Default to Typeform-like controlled navigation (no scrolling)
         // Only allow scrolling when explicitly enabled with data-fc-allow-scroll="true"
@@ -273,12 +291,44 @@ class FormChippy {
 
         // Initialize modules
         this.debug = new Debug(this)
+        this.persistence = new Persistence(this)
         this.validation = new Validation(this)
         this.navigation = new Navigation(this)
         this.progress = new Progress(this)
         this.donutProgress = new DonutProgress(this)
         this.dynamicSlides = new DynamicSlides(this)
         this.inputActive = new InputActive(this)
+        
+        // Ensure this instance is registered in the static instances collection
+        if (!FormChippy.instances) {
+            FormChippy.instances = {}
+        }
+        FormChippy.instances[this.formName] = this
+        this.debug.info(`Registered form instance: ${this.formName}`)
+        
+        // Load saved form data from localStorage if available
+        if (this.persistence && this.validation) {
+            // Get the saved data - our persistence module will automatically handle
+            // both old and new data formats and return just the form data portion
+            const savedData = this.persistence.loadFormData(this.formName)
+            if (savedData) {
+                this.validation.formData = savedData
+                this.debug.info(`Loaded saved form data for form: ${this.formName}`, savedData)
+                
+                // Trigger an event so extensions can react to the loaded data
+                this.trigger('formDataLoaded', {
+                    formName: this.formName,
+                    formData: savedData
+                })
+                
+                // Also add timestamp info to the debug logs if available
+                const fullData = this.persistence.loadFormData(this.formName, true)
+                if (fullData && fullData.timestamp) {
+                    const lastUpdated = new Date(fullData.timestamp)
+                    this.debug.info(`Form data was last saved on: ${lastUpdated.toLocaleString()}`)
+                }
+            }
+        }
 
         // Apply essential styles via JavaScript to ensure scrolling works without CSS dependencies
         this._applyCoreStyles()
@@ -504,6 +554,7 @@ class FormChippy {
 
     /**
      * Update active slide accessibility and tab order
+     * Ensures proper tab navigation from inputs to navigation buttons
      * @param {number} index - Slide index
      * @param {boolean} afterAnimation - Whether this is called after animation completes
      * @private
@@ -1095,7 +1146,7 @@ class FormChippy {
                 // Start with scroll enabled to allow the scrolling operation to work
                 Object.assign(this.slideList.style, {
                     width: '100%',
-                    overflowY: 'scroll',
+                    overflowY: 'scroll', // Default to scrollable
                     scrollBehavior: animate ? 'smooth' : 'auto',
                 })
 
@@ -1446,84 +1497,222 @@ class FormChippy {
 }
 
 // Store instances for access
-const instances = {}
+FormChippy.instances = {}
 
-// Auto-initialize on DOM load
-document.addEventListener('DOMContentLoaded', () => {
-    // Find all containers with the data-fc-container attribute
-    const containers = document.querySelectorAll('[data-fc-container]')
+// --- Helper Functions (defined outside class) ---
+
+/**
+ * Get instance by form name
+ * @param {string} formName - Name of the form
+ * @returns {FormChippy|null} FormChippy instance or null if not found
+ */
+const getInstance = (formName) => {
+    return FormChippy.instances[formName] || null
+};
+
+// Helper function to convert kebab-case to camelCase
+const kebabToCamelCase = (str) => {
+  return str.replace(/-([a-z])/g, (match, char) => char.toUpperCase());
+};
+
+/**
+ * Helper function to directly update the global forms object
+ */
+const __updateGlobalFormData = () => {
+    // Skip if no window or FormChippy
+    if (typeof window === 'undefined' || !window.FormChippy) return;
+    
+    console.log('FormChippy: Updating global form data...');
+    
+    // Populate forms with all current instances and their form data 
+    window.FormChippy.forms = {};
+    
+    // Get all registered instances from static property
+    const allInstances = FormChippy.instances || {};
+    console.log('FormChippy: Found registered instances:', Object.keys(allInstances));
+    
+    for (const name in allInstances) {
+        if (Object.hasOwnProperty.call(allInstances, name)) {
+            const instance = allInstances[name];
+            const camelCaseName = kebabToCamelCase(name);
+            
+            // Get form data directly from the instance
+            const formData = typeof instance.getFormData === 'function' 
+                ? instance.getFormData() 
+                : { error: 'getFormData not available' };
+                
+            // Add to global forms object
+            window.FormChippy.forms[camelCaseName] = {
+                instance: instance,
+                formData: formData
+            };
+            
+            console.log(`FormChippy: Added form to global FormChippy.forms: ${camelCaseName}`);
+            if (instance.debug) instance.debug.log('Added form to global FormChippy.forms:', camelCaseName);
+        }
+    }
+};
+
+/**
+ * Create a new instance manually
+ * @param {Object} options - FormChippy options
+ * @returns {FormChippy} New FormChippy instance
+ */
+const create = (options) => {
+    const instance = new FormChippy(options)
+    const containerName = instance.formName || `fc_instance_${Date.now()}`;
+    if (!FormChippy.instances) {
+        FormChippy.instances = {};
+    }
+    FormChippy.instances[containerName] = instance; // Register instance in static list
+    if (instance.debug) instance.debug.log('Instance created and registered:', containerName);
+
+    // Dispatch init event for manually created instances too
+    const initEvent = new CustomEvent('formchippy:init', {
+        detail: { name: containerName, instance: instance },
+        bubbles: true, cancelable: true
+    });
+    (instance.container || document).dispatchEvent(initEvent);
+
+    // Update global forms object
+    __updateGlobalFormData();
+    
+    return instance;
+};
+
+/**
+ * Initialize all FormChippy instances in the document based on data attributes
+ * This can be called manually if the DOM is dynamically loaded
+ */
+const initAll = () => {
+    const containers = document.querySelectorAll('[data-fc-container]');
+    // Ensure the static instances object exists on the class
+    if (!FormChippy.instances) {
+        FormChippy.instances = {};
+    }
 
     containers.forEach((container) => {
-        const formName = container.getAttribute('data-fc-container')
-        const autoInitAttr = container.getAttribute('data-fc-auto-init')
-
-        // If auto-init is explicitly set to false, skip this container
-        if (autoInitAttr !== null && autoInitAttr === 'false') {
-            console.info(
-                `FormChippy: Skipping auto-init for ${formName} due to data-fc-auto-init="false"`
-            )
-            return
-        }
-
-        // Create FormChippy instance with specific container options
-        instances[formName] = new FormChippy({
-            containerSelector: `[data-fc-container="${formName}"]`,
-        })
-    })
-})
-
-// Global API
-window.formChippy = {
-    /**
-     * Get instance by form name
-     * @param {string} formName - Name of the form
-     * @returns {FormChippy|null} FormChippy instance or null if not found
-     */
-    getInstance: (formName) => {
-        return instances[formName] || null
-    },
-
-    /**
-     * Create a new instance
-     * @param {Object} options - FormChippy options
-     * @returns {FormChippy} New FormChippy instance
-     */
-    create: (options) => {
-        const instance = new FormChippy(options)
-        if (instance.container) {
-            const formName = instance.formName
-            instances[formName] = instance
-        }
-        return instance
-    },
-
-    /**
-     * Initialize all FormChippy instances in the document
-     * This can be called manually if the DOM is dynamically loaded
-     */
-    initAll: () => {
-        const containers = document.querySelectorAll('[data-fc-container]')
-
-        containers.forEach((container) => {
-            const formName = container.getAttribute('data-fc-container')
-            const autoInitAttr = container.getAttribute('data-fc-auto-init')
-
-            // If already initialized or auto-init is false, skip
-            if (
-                instances[formName] ||
-                (autoInitAttr !== null && autoInitAttr === 'false')
-            ) {
-                return
+        const containerName = container.getAttribute('data-fc-container');
+        // Check if an instance for this container name already exists
+        if (!FormChippy.instances[containerName]) {
+            // Retrieve options from data attributes
+            const options = {};
+            // Make sure prototype options exist before iterating
+            const defaultOptions = FormChippy.prototype?.options || {};
+            for (const key in defaultOptions) {
+                const dataAttr = `data-fc-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+                if (container.hasAttribute(dataAttr)) {
+                    let value = container.getAttribute(dataAttr);
+                    // Basic type conversion (boolean, number)
+                    if (value === 'true') value = true;
+                    else if (value === 'false') value = false;
+                    else if (!isNaN(value) && value.trim() !== '') value = Number(value);
+                    options[key] = value;
+                }
             }
 
-            // Create FormChippy instance with specific container options
-            instances[formName] = new FormChippy({
-                containerSelector: `[data-fc-container="${formName}"]`,
-            })
-        })
+            // Ensure the container itself is passed
+            options.containerElement = container;
 
-        return instances
-    },
+            // Create and register the instance
+            const instance = new FormChippy(options);
+            const instanceName = instance.formName || `fc_instance_${Date.now()}`;
+            if (!FormChippy.instances[instanceName]) {
+                FormChippy.instances[instanceName] = instance;
+                if (instance.debug) instance.debug.log('Instance auto-initialized and registered:', instanceName);
+                 // Dispatch init event
+                const initEvent = new CustomEvent('formchippy:init', {
+                    detail: { name: instanceName, instance: instance },
+                    bubbles: true, cancelable: true
+                });
+                container.dispatchEvent(initEvent);
+
+            } else if (FormChippy.instances[instanceName] !== instance) {
+                if (instance.debug) instance.debug.warn('Instance already registered with this name during initAll:', instanceName);
+            }
+        } else {
+            const existingInstance = FormChippy.instances[containerName];
+            if (existingInstance && existingInstance.debug) {
+                existingInstance.debug.log('Skipping already registered container during initAll:', containerName);
+            }
+        }
+    });
+
+    // Update global forms object after all instances are initialized
+    __updateGlobalFormData();
+};
+
+// --- Global Assignment --- 
+
+// Assign helpers and class to window.FormChippy
+if (typeof window !== 'undefined') {
+    // Initialize the global FormChippy object
+    window.FormChippy = {
+        Class: FormChippy, // Expose the class constructor
+        forms: {}, // Object to hold all forms with camelCase keys
+        getInstance: getInstance,
+        create: create,
+        initAll: initAll,
+        refreshFormData: __updateGlobalFormData
+    };
+    
+    // Debug helper function to manually inspect instances
+    window.FormChippy.debugInstances = function() {
+        console.log('FormChippy Instances:', Object.keys(FormChippy.instances));
+        console.log('FormChippy Forms:', Object.keys(window.FormChippy.forms));
+        return {
+            instances: FormChippy.instances,
+            forms: window.FormChippy.forms
+        };
+    };
+    
+    // -------------------------------------------------------------------------
+    // Listen directly for formchippy:init events to capture forms as they initialize
+    // This is the most reliable way to catch forms being created
+    // -------------------------------------------------------------------------
+    document.addEventListener('formchippy:init', function(event) {
+        if (!event.detail || !event.detail.name || !event.detail.instance) return;
+        
+        const formName = event.detail.name;
+        const instance = event.detail.instance;
+        
+        // Convert kebab-case (form-name) to camelCase (formName)
+        const camelName = formName.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+        
+        // Add to the global forms object
+        window.FormChippy.forms[camelName] = {
+            instance: instance,
+            formData: instance.getFormData()
+        };
+        
+        // Also set up a form data observer if the instance has a formDataChanged event
+        if (instance.on && typeof instance.on === 'function') {
+            // Listen for form data changes and update the global object
+            instance.on('formDataChanged', function() {
+                window.FormChippy.forms[camelName].formData = instance.getFormData();
+            });
+        }
+        
+        // Debug message if debug is enabled on this instance
+        if (instance.debug) {
+            instance.debug.log(`Form '${formName}' added to global window.FormChippy.forms as '${camelName}'`);
+        }
+    });
+    
+    // Auto-initialize on DOM load if the default setting is true
+    // Check the default option value from an instance's perspective
+    const tempOptions = new FormChippy({autoInitialize: false}); // Create temp instance to read default
+    if (tempOptions.options.autoInitialize !== false) { // Check if default wasn't overridden to false
+         if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', window.FormChippy.initAll);
+        } else {
+            window.FormChippy.initAll(); // Initialize immediately if already loaded
+        }
+    }
 }
 
-export default FormChippy
+// Export the FormChippy class as the default for module usage
+export default FormChippy;
+
+// Export helpers for potential module usage as well
+export { getInstance, create, initAll };

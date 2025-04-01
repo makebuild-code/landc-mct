@@ -34,6 +34,10 @@ export class Validation {
      * @returns {boolean} - True if valid, false otherwise
      */
     validateSlide(slide) {
+        this.formChippy.debug.info(`[validateSlide] Starting validation for slide: ${slide.getAttribute('data-fc-slide') || 'Unnamed Slide'}`)
+        let isSlideValid = true
+        let firstErrorInput = null
+
         const slideId = slide.getAttribute('data-fc-slide')
 
         if (!this.formChippy.validationEnabled) {
@@ -130,6 +134,7 @@ export class Validation {
                 overallValid ? 'Passed' : 'Failed'
             }`
         )
+        this.formChippy.debug.info(`[validateSlide] Completed. Slide valid: ${overallValid}`)
         return overallValid
     }
 
@@ -157,70 +162,25 @@ export class Validation {
         container.addEventListener('input', (event) => {
             const input = event.target
 
-            // Handle all input types
+            // Handle standard input types immediately for visual error clearing
             if (
-                input.tagName === 'INPUT' ||
+                input.tagName === 'INPUT' && input.type !== 'radio' && input.type !== 'checkbox' ||
                 input.tagName === 'TEXTAREA' ||
                 input.tagName === 'SELECT'
             ) {
-                // Update the form data
+                // Log the input value immediately when the event fires
+                this.formChippy.debug.info(`[Input Event] Input on '${input.name || input.type}'. Value: '${input.value}'`);
+
+                // 1. Update the form data
                 this.updateFormData(input)
 
-                // Check for and clear any input errors
-                if (
-                    input.classList.contains('fc-error') ||
-                    input.classList.contains('error')
-                ) {
-                    if (input.value.trim() !== '') {
-                        // Clear the error specifically on this input
-                        this.clearInputError(input)
-
-                        // Also clear parent content error if appropriate
-                        const contentElement =
-                            input.closest('[data-fc-content]')
-                        if (
-                            contentElement &&
-                            contentElement.classList.contains(
-                                this.options.errorClass
-                            )
-                        ) {
-                            contentElement.classList.remove('error')
-                        }
-
-                        this.formChippy.debug.info(
-                            'Input value entered, cleared error state'
-                        )
-                    }
+                // 2. Re-validate the entire slide immediately
+                const slideElement = input.closest('[data-fc-slide]')
+                if (slideElement) {
+                    const isValid = this.validateSlide(slideElement) // This will trigger detailed logs inside validateSlide
+                    this.formChippy.debug.info(`[Input Event] Result of validateSlide after input: ${isValid ? 'Valid' : 'Invalid'}`)
                 } else {
-                    // Handle nested Webflow input structure
-                    // Check if the input is inside a field element
-                    const fieldElement = input.closest(
-                        '[data-fc-element="field"]'
-                    )
-                    if (
-                        fieldElement &&
-                        (fieldElement.classList.contains('fc-error') ||
-                            fieldElement.classList.contains('error'))
-                    ) {
-                        if (input.value.trim() !== '') {
-                            // Clear the error on the field element
-                            this.clearInputError(fieldElement)
-
-                            // Also clear parent content error if appropriate
-                            const contentElement =
-                                fieldElement.closest('[data-fc-content]')
-                            if (
-                                contentElement &&
-                                contentElement.classList.contains(
-                                    this.options.errorClass
-                                )
-                            ) {
-                                contentElement.classList.remove('error')
-                            }
-
-                            // this.formChippy.debug.info( 'Input value entered in field element, cleared error state' )
-                        }
-                    }
+                    this.formChippy.debug.warn(`[Input Event] Could not find parent slide for input: ${input.name || input.id}`)
                 }
             }
         })
@@ -272,7 +232,7 @@ export class Validation {
                 if (input.checked && input.name) {
                     // Find all radios in the same group within this slide
                     const groupName = input.name
-                    const radiosInGroup = slide.querySelectorAll(
+                    const radiosInGroup = slideElement.querySelectorAll(
                         `input[type="radio"][name="${groupName}"]`
                     )
 
@@ -304,20 +264,31 @@ export class Validation {
                     })
                 }
 
-                // 3. Clear potential group-level error message (visual only)
-                const group = input.closest('[data-fc-input-group]')
-                if (group) {
-                    const contentElement = group.closest('[data-fc-content]')
-                    if (
-                        contentElement &&
-                        contentElement.classList.contains(
-                            this.options.errorClass
-                        )
-                    ) {
-                        this.clearInputError(group) // Use group context for message span
-                        this.formChippy.debug.info(
-                            `Radio selection made for group '${input.name}', cleared visual group error message.`
-                        )
+                // 3. Immediately clear errors and revalidate when a radio is selected
+                if (input.checked) {
+                    // Find all related elements
+                    const group = input.closest('[data-fc-input-group]')
+                    const contentElement = input.closest('[data-fc-content]')
+                    const slide = input.closest('[data-fc-slide]')
+
+                    // Always clear any error states when a radio is selected
+                    if (group) {
+                        this.clearInputError(group) // Clear error on the group element
+                    }
+
+                    // Explicitly clear content element errors
+                    if (contentElement) {
+                        contentElement.classList.remove(this.options.errorClass, 'error')
+                        // Remove any error message elements
+                        const errorMessages = contentElement.querySelectorAll('.fc-error-message')
+                        errorMessages.forEach(el => el.remove())
+                        this.formChippy.debug.info(`Radio '${input.value}' selected - cleared content errors for group '${input.name}'`)
+                    }
+
+                    // Revalidate the slide to ensure validation state is updated
+                    if (slide) {
+                        const isValid = this.validateSlide(slide)
+                        this.formChippy.debug.info(`Radio '${input.value}' selected - slide validation result: ${isValid ? 'Valid' : 'Invalid'}`)
                     }
                 }
             }
@@ -411,11 +382,21 @@ export class Validation {
         // --- Radio Button Handling ---
         if (input.type === 'radio') {
             if (input.checked) {
-                // Set the value for the group using the group name as the key
-                this.formData[slideId][input.name] = input.value
-                this.formChippy.debug.info(
-                    `Updated radio group '${input.name}': ${input.value}`
-                )
+                // For radio inputs, store the value directly to prevent nesting issues
+                // If slideId and input.name are the same, we need to handle this differently
+                if (slideId === input.name) {
+                    // Store directly in the slide object to avoid nesting
+                    this.formData[slideId] = input.value
+                    this.formChippy.debug.info(
+                        `Updated radio value for slide '${slideId}': ${input.value}`
+                    )
+                } else {
+                    // Normal case - different slide ID and input name
+                    this.formData[slideId][input.name] = input.value
+                    this.formChippy.debug.info(
+                        `Updated radio group '${input.name}': ${input.value}`
+                    )
+                }
 
                 // Cleanup potentially orphaned keys if data-fc-input was used inconsistently
                 const slideElement = input.closest('[data-fc-slide]')
@@ -566,6 +547,26 @@ export class Validation {
 
         // Log the complete, updated form data object AFTER every update attempt, regardless of whether standard update ran
         this.formChippy.debug.info(`Current formData:`, this.formData)
+        
+        // Save form data to localStorage using the persistence module
+        if (this.formChippy.persistence) {
+            // Make sure we have the correct form name from the data-fc-container attribute
+            const formName = this.formChippy.formName || this.formChippy.name;
+            this.formChippy.persistence.saveFormData(formName, this.formData);
+            this.formChippy.debug.info(`Form data saved to localStorage for form ${formName}`);
+            
+            // Trigger a custom event that can be listened to by the example HTML
+            if (typeof document !== 'undefined') {
+                const event = new CustomEvent('formchippy:dataSaved', {
+                    detail: {
+                        formName: formName,
+                        formData: this.formData
+                    },
+                    bubbles: true
+                });
+                document.dispatchEvent(event);
+            }
+        }
     }
 
     /**
@@ -578,11 +579,12 @@ export class Validation {
      * @param {string} [message] - Optional error message to display
      */
     toggleContentError(element, hasError, message) {
+        this.formChippy.debug.info(`[toggleContentError] Called for element near content: ${element.closest('[data-fc-content]').tagName || 'Not found'}. HasError: ${hasError}`)
         // Find the content element
         const contentElement = element.closest('[data-fc-content]')
         if (!contentElement) {
             this.formChippy.debug.warn(
-                'No content element found for error handling'
+                '[toggleContentError] Could not find parent [data-fc-content] element.'
             )
             return
         }
@@ -592,7 +594,7 @@ export class Validation {
             if (!contentElement.classList.contains('error')) {
                 contentElement.classList.add('error')
                 this.formChippy.debug.info(
-                    `Added error class to content element`
+                    `[toggleContentError] Added error class to content element`
                 )
 
                 // Only add error message if there's no custom error element and a message was provided
@@ -612,7 +614,7 @@ export class Validation {
                     if (!contentElement.querySelector('.fc-error-message')) {
                         contentElement.appendChild(errorElement)
                         this.formChippy.debug.info(
-                            `Added error message to content element`
+                            `[toggleContentError] Added error message to content element`
                         )
                     }
                 }
@@ -622,7 +624,7 @@ export class Validation {
             if (contentElement.classList.contains('error')) {
                 contentElement.classList.remove('error')
                 this.formChippy.debug.info(
-                    `Removed error class from content element`
+                    `[toggleContentError] Removed error class from content element`
                 )
 
                 // Remove any error messages
@@ -631,7 +633,7 @@ export class Validation {
                 if (errorElement) {
                     errorElement.remove()
                     this.formChippy.debug.info(
-                        `Removed error message from content element`
+                        `[toggleContentError] Removed error message from content element`
                     )
                 }
             }
@@ -642,6 +644,7 @@ export class Validation {
      * @returns {boolean} - True if valid, false otherwise
      */
     validateInput(input, fieldElement) {
+        this.formChippy.debug.info(`[validateInput] Validating input: ${input.name || input.id || input.type}, FieldElement: ${fieldElement?.tagName || 'None'}`)
         // Check if input exists and is a valid element
         if (!input || typeof input !== 'object') {
             console.warn(
@@ -692,7 +695,7 @@ export class Validation {
         // Check if the input is empty
         if (trimmedValue === '') {
             this.formChippy.debug.info(
-                `Required input is empty, validation failed`
+                `[validateInput] Required input is empty, validation FAILED`
             )
             this.showInputError(elementToApplyError, 'This field is required')
 
@@ -701,6 +704,18 @@ export class Validation {
             return false
         }
 
+        this.formChippy.debug.info(`[validateInput] Input value: '${trimmedValue}'. Required: ${!isNotRequired}`)
+
+        // Check if the input is empty
+        if (trimmedValue === '') {
+            this.formChippy.debug.info(
+                `[validateInput] Required input is empty, validation FAILED`
+            )
+            this.showInputError(elementToApplyError, 'This field is required')
+            return false
+        }
+
+        this.formChippy.debug.info(`[validateInput] Input passed basic validation.`) // Assuming more complex validation could go here
         // All other validation is skipped per requirements
         return true
     }
@@ -1019,68 +1034,23 @@ export class Validation {
 
             // Handle all input types
             if (
-                input.tagName === 'INPUT' ||
+                input.tagName === 'INPUT' && input.type !== 'radio' && input.type !== 'checkbox' ||
                 input.tagName === 'TEXTAREA' ||
                 input.tagName === 'SELECT'
             ) {
-                // Update the form data
+                // Log the input value immediately when the event fires
+                this.formChippy.debug.info(`[Input Event] Input on '${input.name || input.type}'. Value: '${input.value}'`);
+
+                // 1. Update the form data
                 this.updateFormData(input)
 
-                // Check for and clear any input errors
-                if (
-                    input.classList.contains('fc-error') ||
-                    input.classList.contains('error')
-                ) {
-                    if (input.value.trim() !== '') {
-                        // Clear the error specifically on this input
-                        this.clearInputError(input)
-
-                        // Also clear parent content error if appropriate
-                        const contentElement =
-                            input.closest('[data-fc-content]')
-                        if (
-                            contentElement &&
-                            contentElement.classList.contains(
-                                this.options.errorClass
-                            )
-                        ) {
-                            contentElement.classList.remove('error')
-                        }
-
-                        this.formChippy.debug.info(
-                            'Input value entered, cleared error state'
-                        )
-                    }
+                // 2. Re-validate the entire slide immediately
+                const slideElement = input.closest('[data-fc-slide]')
+                if (slideElement) {
+                    const isValid = this.validateSlide(slideElement) // This will trigger detailed logs inside validateSlide
+                    this.formChippy.debug.info(`[Input Event] Result of validateSlide after input: ${isValid ? 'Valid' : 'Invalid'}`)
                 } else {
-                    // Handle nested Webflow input structure
-                    // Check if the input is inside a field element
-                    const fieldElement = input.closest(
-                        '[data-fc-element="field"]'
-                    )
-                    if (
-                        fieldElement &&
-                        (fieldElement.classList.contains('fc-error') ||
-                            fieldElement.classList.contains('error'))
-                    ) {
-                        if (input.value.trim() !== '') {
-                            // Clear the error on the field element
-                            this.clearInputError(fieldElement)
-
-                            // Also clear parent content error if appropriate
-                            const contentElement =
-                                fieldElement.closest('[data-fc-content]')
-                            if (
-                                contentElement &&
-                                contentElement.classList.contains(
-                                    this.options.errorClass
-                                )
-                            ) {
-                                contentElement.classList.remove('error')
-                            }
-
-                            // this.formChippy.debug.info( 'Input value entered in field element, cleared error state' )
-                        }
-                    }
+                    this.formChippy.debug.warn(`[Input Event] Could not find parent slide for input: ${input.name || input.id}`)
                 }
             }
         })
@@ -1132,7 +1102,7 @@ export class Validation {
                 if (input.checked && input.name) {
                     // Find all radios in the same group within this slide
                     const groupName = input.name
-                    const radiosInGroup = slide.querySelectorAll(
+                    const radiosInGroup = slideElement.querySelectorAll(
                         `input[type="radio"][name="${groupName}"]`
                     )
 
@@ -1164,20 +1134,31 @@ export class Validation {
                     })
                 }
 
-                // 3. Clear potential group-level error message (visual only)
-                const group = input.closest('[data-fc-input-group]')
-                if (group) {
-                    const contentElement = group.closest('[data-fc-content]')
-                    if (
-                        contentElement &&
-                        contentElement.classList.contains(
-                            this.options.errorClass
-                        )
-                    ) {
-                        this.clearInputError(group) // Use group context for message span
-                        this.formChippy.debug.info(
-                            `Radio selection made for group '${input.name}', cleared visual group error message.`
-                        )
+                // 3. Immediately clear errors and revalidate when a radio is selected
+                if (input.checked) {
+                    // Find all related elements
+                    const group = input.closest('[data-fc-input-group]')
+                    const contentElement = input.closest('[data-fc-content]')
+                    const slide = input.closest('[data-fc-slide]')
+
+                    // Always clear any error states when a radio is selected
+                    if (group) {
+                        this.clearInputError(group) // Clear error on the group element
+                    }
+
+                    // Explicitly clear content element errors
+                    if (contentElement) {
+                        contentElement.classList.remove(this.options.errorClass, 'error')
+                        // Remove any error message elements
+                        const errorMessages = contentElement.querySelectorAll('.fc-error-message')
+                        errorMessages.forEach(el => el.remove())
+                        this.formChippy.debug.info(`Radio '${input.value}' selected - cleared content errors for group '${input.name}'`)
+                    }
+
+                    // Revalidate the slide to ensure validation state is updated
+                    if (slide) {
+                        const isValid = this.validateSlide(slide)
+                        this.formChippy.debug.info(`Radio '${input.value}' selected - slide validation result: ${isValid ? 'Valid' : 'Invalid'}`)
                     }
                 }
             }
@@ -1242,6 +1223,14 @@ export class Validation {
      * @param {string} message - Error message
      */
     showInputError(input, message) {
+        this.formChippy.debug.info(`[showInputError] Called for: ${input.tagName}, Message: ${message}`)
+        const isGroup = !input.matches('input, textarea, select')
+        const targetElement = isGroup ? input : input.closest('[data-fc-element="field"]') || input
+        this.formChippy.debug.info(`[showInputError] Target element for error class: ${targetElement.tagName}${targetElement.id ? '#' + targetElement.id : ''}`)
+
+        // Add error class to the target element (field wrapper or input itself)
+        targetElement.classList.add('fc-error', 'error')
+
         // Log validation error
         this.formChippy.debug.logValidation(input, false, message)
 
@@ -1256,10 +1245,9 @@ export class Validation {
 
         // Handle group elements differently if needed
         if (!input.matches('input, textarea, select')) {
-            // Check if it's not a standard input
-            // Apply error styling/class to the group container itself or a specific child
             input.classList.add('fc-error', 'error') // Add error class to the group
         } else {
+            // Clear error from the input itself
             input.style.borderColor =
                 'var(--fc-error-color, var(--mct-error-color, #ff3860))'
             input.classList.add('fc-error', 'error')
@@ -1305,17 +1293,65 @@ export class Validation {
      * @param {HTMLElement} input - Input element
      */
     clearInputError(input) {
-        // Log validation success
-        if (input.classList.contains('fc-error')) {
-            this.formChippy.debug.logValidation(input, true)
-        }
+        this.formChippy.debug.info(`[clearInputError] Called for: ${input.tagName}${input.id ? '#' + input.id : ''}`)
+        // Clear error message associated with the content element
+        const errorMessageElement = input
+            .closest('[data-fc-content]')
+            .querySelector('.fc-error-message')
 
+        // Special handling for radio inputs to ensure all related elements are cleared
+        if (input.type === 'radio' && input.checked) {
+            // First clear the radio input itself
+            input.classList.remove('fc-error', 'error')
+            
+            // Get related containers
+            const group = input.closest('[data-fc-input-group]')
+            const contentElement = input.closest('[data-fc-content]')
+            
+            // Clear group error
+            if (group) {
+                group.classList.remove('fc-error', 'error')
+                
+                // Remove any error message elements within the group
+                const groupErrorMessages = group.querySelectorAll('.fc-error-message')
+                groupErrorMessages.forEach(el => el.remove())
+            }
+            
+            // Clear content element error
+            if (contentElement) {
+                contentElement.classList.remove(this.options.errorClass, 'error')
+                
+                // Remove any error message elements at the content level
+                const contentErrorMessages = contentElement.querySelectorAll('.fc-error-message')
+                contentErrorMessages.forEach(el => el.remove())
+            }
+            
+            this.formChippy.debug.info(
+                `Enhanced error clearing for radio input '${input.name}' - cleared radio, group and content errors`
+            )
+            return
+        }
+        
         // Handle group elements
         if (!input.matches('input, textarea, select')) {
+            this.formChippy.debug.info(`[clearInputError] Clearing error from group/non-standard element.`) 
             input.classList.remove('fc-error', 'error') // Remove error class from the group
         } else {
+            this.formChippy.debug.info(`[clearInputError] Clearing error from standard input/textarea/select.`) 
+            // Clear error from the input itself
             input.style.borderColor = ''
             input.classList.remove('fc-error', 'error')
+
+            // Also clear error from the parent field element if it exists
+            const fieldElement = input.closest('[data-fc-element="field"]')
+            if (fieldElement) {
+                fieldElement.classList.remove('fc-error', 'error')
+                this.formChippy.debug.info(
+                    `[clearInputError] Cleared error from parent field element: ${fieldElement.tagName}`
+                )
+            } else {
+                this.formChippy.debug.info(`[clearInputError] No parent field element found.`)
+            }
         }
 
         // Check if input is empty and update empty class accordingly (only for standard inputs)
@@ -1339,11 +1375,12 @@ export class Validation {
         // Content element error handling is now done by toggleContentError() method
 
         // Remove error message
-        const errorElement =
-            questionContainer.querySelector('.fc-error-message')
-        if (errorElement) {
-            errorElement.remove()
+        if (errorMessageElement) {
+            errorMessageElement.remove()
         }
+        
+        // Also clear the error from the parent content element and remove the message
+        this.toggleContentError(input, false)
     }
 
     /**

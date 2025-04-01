@@ -4,9 +4,9 @@
 
 -   slide grouping for progress bar via attributes for slides and progress bar to connect which slide group to which progress bar
 -   validation per slide
-    -- radio groups check if an option is selected
-    -- input fields check if they are not empty
     -- check validation from API, connect with TypeScript person
+    -- radiofield when error then selecting another radio from the same group, the error doesn't go away. so might be better to check radios per radio group or something.
+    -- radiofield error doesn't go away when typing in the input child of the radiofield
 -   go to slide attribute button
 -   go to slide deppending on input
 -   show slide group depending on input
