@@ -1,13 +1,15 @@
 /**
- * FormChippy.js v1.5.2 (Standalone)
+ * FormChippy.js v1.5.3 (Standalone)
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.5.3:
+ * - Fixed data persistence logic for standard radio button groups.
+ * - Corrected data handling for inputs nested within radiofield elements.
  *
  * New in v1.5.2:
  * - Enhanced validation for immediate feedback on input/change
  * - Updated form data is now also stored in local storage as JSON
- * - Fixed data storage logic for standard radio button groups.
- * - Corrected data handling for inputs nested within radiofield elements.
  *
  * New in v1.5.1:
  * - Refactored initialization and event handling
@@ -28,7 +30,7 @@
  * - Automatic filtering of slides with hidden ancestors (display:none)
  * - Improved slide detection regardless of DOM structure depth
  * - Enhanced debug information showing excluded slides and their status
- * 
+ *
  * New in v1.3.0:
  * - Progress fraction indicator ("Step X of Y") integrated in core library
  * - Donut progress indicator for circular visualizations
@@ -38,7 +40,7 @@
  * - Percentage-based scroll positioning (e.g., data-fc-slide-position="25%")
  * - Improved overflow control to prevent scrolling after slide navigation
  *
- * @version     1.5.2
+ * @version     1.5.3
  * @license     MIT
  * @author      JP Dionisio
  * Copyright (c) 2025 JP Dionisio
@@ -1143,13 +1145,17 @@ class Validation {
         // --- Radio Button Handling ---
         if (input.type === 'radio') {
             if (input.checked) {
-                // For radio inputs, store the value directly to prevent nesting issues
-                // If slideId and input.name are the same, we need to handle this differently
+                // For radio inputs, always maintain an object structure for the slideId
+                // This ensures compatibility with radiofield inputs
                 if (slideId === input.name) {
-                    // Store directly in the slide object to avoid nesting
-                    this.formData[slideId] = input.value
+                    // Store in a nested object structure to avoid string/object conflicts
+                    if (typeof this.formData[slideId] !== 'object' || this.formData[slideId] === null) {
+                        this.formData[slideId] = {}
+                    }
+                    // Store with the original radio name, even when nested
+                    this.formData[slideId][input.name] = input.value
                     this.formChippy.debug.info(
-                        `Updated radio value for slide '${slideId}': ${input.value}`
+                        `Updated radio value for slide '${slideId}' with nested key '${input.name}': ${input.value}`
                     )
                 } else {
                     // Normal case - different slide ID and input name
@@ -1207,6 +1213,63 @@ class Validation {
             const associatedRadio = radioFieldWrapper.querySelector(
                 'input[type="radio"]'
             )
+            
+            // Find the associated radio button within the wrapper
+            const radioName = associatedRadio ? associatedRadio.name : null;
+            const originalDataKey = dataKey;
+            
+            // Only modify the dataKey if both conditions are met:
+            // 1. No explicit data-input was provided
+            // 2. The input field name would conflict with the radio name
+            if (!input.hasAttribute('data-input') && radioName && dataKey === radioName) {
+                // Determine input type for generating proper suffix
+                let inputTypeSuffix = 'field';
+                if (input.type === 'number') {
+                    inputTypeSuffix = 'number';
+                } else if (input.type === 'text') {
+                    inputTypeSuffix = 'text';
+                } else if (input.type === 'email') {
+                    inputTypeSuffix = 'email';
+                } else if (input.type === 'tel') {
+                    inputTypeSuffix = 'tel';
+                } else if (input.type === 'date') {
+                    inputTypeSuffix = 'date';
+                } else if (input.type === 'checkbox') {
+                    inputTypeSuffix = 'checkbox';
+                } else if (input.tagName.toLowerCase() === 'textarea') {
+                    inputTypeSuffix = 'textarea';
+                } else if (input.tagName.toLowerCase() === 'select') {
+                    inputTypeSuffix = 'select';
+                }
+                
+                // Check if we need to add an index (in case of multiple inputs of same type)
+                // First, find all inputs of this type within the radiofield
+                const similarInputs = Array.from(
+                    radioFieldWrapper.querySelectorAll(
+                        input.tagName.toLowerCase() === 'select' ? 'select' :
+                        input.tagName.toLowerCase() === 'textarea' ? 'textarea' :
+                        `input[type="${input.type}"]`
+                    )
+                );
+                
+                // Get the index of this input among similar inputs
+                const index = similarInputs.indexOf(input);
+                
+                // Add index to suffix if there are multiple (index > 0 or totalCount > 1)
+                let suffix = inputTypeSuffix;
+                if (similarInputs.length > 1) {
+                    suffix = `${inputTypeSuffix}-${index + 1}`;
+                }
+                
+                // Create the new key
+                const newDataKey = `${radioName}-${suffix}`;
+                this.formChippy.debug.info(
+                    `Generated key '${newDataKey}' for input in radiofield to avoid conflict with radio name`
+                );
+                
+                // Override dataKey for the rest of this method
+                dataKey = newDataKey;
+            }
 
             if (associatedRadio && !associatedRadio.checked) {
                 // Radio NOT checked: remove this input's data if it exists
@@ -1675,6 +1738,7 @@ class Validation {
                         'Please select an option'
                     )
                 } else {
+                    
                     this.formChippy.debug.warn(
                         `Could not find suitable element to display 'Please select an option' error for group ${groupName}`
                     )
@@ -2161,8 +2225,25 @@ class Validation {
 
         // Flatten the slide-based structure into a single object
         for (const slideId in this.formData) {
-            for (const fieldName in this.formData[slideId]) {
-                flatData[fieldName] = this.formData[slideId][fieldName]
+            if (typeof this.formData[slideId] === 'object' && this.formData[slideId] !== null) {
+                // Check for special case where slideId matches the radio name
+                if (slideId in this.formData[slideId]) {
+                    // Set the slide ID value from the nested radio property
+                    flatData[slideId] = this.formData[slideId][slideId]
+                    
+                    // Include all properties including the nested value for individual access
+                    for (const fieldName in this.formData[slideId]) {
+                        flatData[fieldName] = this.formData[slideId][fieldName]
+                    }
+                } else {
+                    // Normal case - copy all properties
+                    for (const fieldName in this.formData[slideId]) {
+                        flatData[fieldName] = this.formData[slideId][fieldName]
+                    }
+                }
+            } else {
+                // Direct value (for backwards compatibility)
+                flatData[slideId] = this.formData[slideId]
             }
         }
 
@@ -4988,15 +5069,17 @@ class DateInput {
 
 
 /**
- * FormChippy.js v1.5.2
+ * FormChippy.js v1.5.3
  * A smooth, vertical scrolling multi-step form experience
  * Created for L&C Mortgage Finder
+ *
+ * New in v1.5.3:
+ * - Fixed data persistence logic for standard radio button groups.
+ * - Corrected data handling for inputs nested within radiofield elements.
  *
  * New in v1.5.2:
  * - Enhanced validation for immediate feedback on input/change
  * - Updated form data is now also stored in local storage as JSON
- * - Fixed data storage logic for standard radio button groups.
- * - Corrected data handling for inputs nested within radiofield elements.
  *
  * New in v1.5.1:
  * - Refactored initialization and event handling
@@ -5017,7 +5100,7 @@ class DateInput {
  * - Automatic filtering of slides with hidden ancestors (display:none)
  * - Improved slide detection regardless of DOM structure depth
  * - Enhanced debug information showing excluded slides and their status
- * 
+ *
  * New in v1.3.0:
  * - Progress fraction indicator ("Step X of Y") integrated in core library
  * - Donut progress indicator for circular visualizations
@@ -5027,7 +5110,7 @@ class DateInput {
  * - Percentage-based scroll positioning (e.g., data-fc-slide-position="25%")
  * - Improved overflow control to prevent scrolling after slide navigation
  *
- * @version     1.5.2
+ * @version     1.5.3
  * @license     MIT
  * @author      JP Dionisio
  * Copyright (c) 2025 JP Dionisio
@@ -5053,7 +5136,7 @@ class DateInput {
 
 window.FormChippy = class FormChippy {
     // Static property to hold all instances
-    static instances = {};
+    static instances = {}
 
     constructor(options = {}) {
         // Default options
@@ -5184,7 +5267,7 @@ window.FormChippy = class FormChippy {
 
         this.formName =
             this.container.getAttribute('data-fc-container') || 'form'
-            
+
         console.log(`FormChippy: Initializing form with name: ${this.formName}`)
 
         // Default to Typeform-like controlled navigation (no scrolling)
@@ -5226,21 +5309,25 @@ window.FormChippy = class FormChippy {
         const allSlides = Array.from(
             this.slideList.querySelectorAll(this.options.slideSelector)
         )
-        
+
         // Filter out slides that are inside hidden containers (display: none)
-        this.slides = allSlides.filter(slide => !this._hasHiddenAncestor(slide))
+        this.slides = allSlides.filter(
+            (slide) => !this._hasHiddenAncestor(slide)
+        )
         this.totalSlides = this.slides.length
-        
+
         // Log any filtered slides for debugging
         if (allSlides.length !== this.slides.length) {
             console.info(
-                `FormChippy: Filtered out ${allSlides.length - this.slides.length} slides with hidden ancestors`
+                `FormChippy: Filtered out ${
+                    allSlides.length - this.slides.length
+                } slides with hidden ancestors`
             )
         }
-        
+
         // Store the parent structure for each slide to help with navigation
         this.slideParents = new Map()
-        this.slides.forEach(slide => {
+        this.slides.forEach((slide) => {
             let parent = slide.parentElement
             // Check if the parent is a slide group
             if (parent && parent.matches('[data-fc-slide-group]')) {
@@ -5287,14 +5374,14 @@ window.FormChippy = class FormChippy {
         this.donutProgress = new DonutProgress(this)
         this.dynamicSlides = new DynamicSlides(this)
         this.inputActive = new InputActive(this)
-        
+
         // Ensure this instance is registered in the static instances collection
         if (!FormChippy.instances) {
             FormChippy.instances = {}
         }
         FormChippy.instances[this.formName] = this
         this.debug.info(`Registered form instance: ${this.formName}`)
-        
+
         // Load saved form data from localStorage if available
         if (this.persistence && this.validation) {
             // Get the saved data - our persistence module will automatically handle
@@ -5302,19 +5389,27 @@ window.FormChippy = class FormChippy {
             const savedData = this.persistence.loadFormData(this.formName)
             if (savedData) {
                 this.validation.formData = savedData
-                this.debug.info(`Loaded saved form data for form: ${this.formName}`, savedData)
-                
+                this.debug.info(
+                    `Loaded saved form data for form: ${this.formName}`,
+                    savedData
+                )
+
                 // Trigger an event so extensions can react to the loaded data
                 this.trigger('formDataLoaded', {
                     formName: this.formName,
-                    formData: savedData
+                    formData: savedData,
                 })
-                
+
                 // Also add timestamp info to the debug logs if available
-                const fullData = this.persistence.loadFormData(this.formName, true)
+                const fullData = this.persistence.loadFormData(
+                    this.formName,
+                    true
+                )
                 if (fullData && fullData.timestamp) {
                     const lastUpdated = new Date(fullData.timestamp)
-                    this.debug.info(`Form data was last saved on: ${lastUpdated.toLocaleString()}`)
+                    this.debug.info(
+                        `Form data was last saved on: ${lastUpdated.toLocaleString()}`
+                    )
                 }
             }
         }
@@ -5364,7 +5459,7 @@ window.FormChippy = class FormChippy {
 
         // Initialize the dynamic slides module
         this.dynamicSlides.init()
-        
+
         // Initialize first slide and ensure it's properly active
         this._updateActiveSlide(0)
 
@@ -5431,21 +5526,21 @@ window.FormChippy = class FormChippy {
      * @private
      */
     _hasHiddenAncestor(element) {
-        let current = element;
-        
+        let current = element
+
         // Check the element and all its ancestors up to the slide-list
         while (current && !current.hasAttribute('data-fc-slide-list')) {
             // Get computed style to check display property
-            const style = window.getComputedStyle(current);
-            
+            const style = window.getComputedStyle(current)
+
             if (style.display === 'none') {
-                return true;
+                return true
             }
-            
-            current = current.parentElement;
+
+            current = current.parentElement
         }
-        
-        return false;
+
+        return false
     }
 
     /**
@@ -5491,7 +5586,7 @@ window.FormChippy = class FormChippy {
             if (contentElement) {
                 Object.assign(contentElement.style, {
                     overflowY: 'visible',
-                    maxHeight: ''
+                    maxHeight: '',
                 })
             }
         })
@@ -5710,14 +5805,14 @@ window.FormChippy = class FormChippy {
         })
 
         this.container.dispatchEvent(slideChangeEvent)
-        
+
         // Trigger internal slideChanged event for modules like DonutProgress
         this.trigger('slideChanged', {
             currentSlideIndex: index,
             totalSlides: this.slides.length,
-            slideId: this.slides[index].getAttribute('data-fc-slide')
+            slideId: this.slides[index].getAttribute('data-fc-slide'),
         })
-        
+
         // Ensure tabindex focus trapping is updated on slide change
         this._setupActiveSlideTabbing(this.slides[index])
     }
@@ -5790,7 +5885,10 @@ window.FormChippy = class FormChippy {
                 )
                 inactiveElements.forEach((el) => {
                     // Store original value if not already stored
-                    if (!el._fcOriginalTabindex && el.hasAttribute('tabindex')) {
+                    if (
+                        !el._fcOriginalTabindex &&
+                        el.hasAttribute('tabindex')
+                    ) {
                         el._fcOriginalTabindex = el.getAttribute('tabindex')
                     } else if (!el._fcOriginalTabindex) {
                         el._fcOriginalTabindex = '0'
@@ -5852,13 +5950,13 @@ window.FormChippy = class FormChippy {
 
         const firstFocusable = focusableElements[0]
         const lastFocusable = focusableElements[focusableElements.length - 1]
-        
+
         // Log focus trap setup for debugging
         this.debug.info('Setting up focus trap', {
             slideId: slide.getAttribute('data-fc-slide'),
             focusableCount: focusableElements.length,
             firstElement: firstFocusable.tagName,
-            lastElement: lastFocusable.tagName
+            lastElement: lastFocusable.tagName,
         })
 
         // Initialize trap handlers array if needed
@@ -5869,7 +5967,9 @@ window.FormChippy = class FormChippy {
             if (e.key === 'Tab' && e.shiftKey) {
                 e.preventDefault()
                 lastFocusable.focus()
-                this.debug.info('Focus trap: wrapped from first to last element')
+                this.debug.info(
+                    'Focus trap: wrapped from first to last element'
+                )
             }
         }
 
@@ -5878,7 +5978,9 @@ window.FormChippy = class FormChippy {
             if (e.key === 'Tab' && !e.shiftKey) {
                 e.preventDefault()
                 firstFocusable.focus()
-                this.debug.info('Focus trap: wrapped from last to first element')
+                this.debug.info(
+                    'Focus trap: wrapped from last to first element'
+                )
             }
         }
 
@@ -5913,16 +6015,21 @@ window.FormChippy = class FormChippy {
             )
             return
         }
-        
+
         // Check if the target slide is within a slide group
         const targetSlide = this.slides[index]
         const slideGroup = this.slideParents.get(targetSlide)
-        
+
         // If the slide is in a slide group, ensure the group is visible
         if (slideGroup) {
             // Check if the slide group is hidden
-            if (slideGroup.style.display === 'none' || slideGroup.classList.contains('fc-hidden')) {
-                this.debug.info(`Target slide ${index} is in a hidden slide group. Making group visible.`)
+            if (
+                slideGroup.style.display === 'none' ||
+                slideGroup.classList.contains('fc-hidden')
+            ) {
+                this.debug.info(
+                    `Target slide ${index} is in a hidden slide group. Making group visible.`
+                )
                 slideGroup.style.display = ''
                 slideGroup.classList.remove('fc-hidden')
             }
@@ -6148,7 +6255,7 @@ window.FormChippy = class FormChippy {
                         // Reset only overflow properties
                         Object.assign(slideContent.style, {
                             overflow: '',
-                            maxHeight: ''
+                            maxHeight: '',
                         })
                     }
 
@@ -6497,50 +6604,60 @@ FormChippy.instances = {}
  */
 const getInstance = (formName) => {
     return FormChippy.instances[formName] || null
-};
+}
 
 // Helper function to convert kebab-case to camelCase
 const kebabToCamelCase = (str) => {
-  return str.replace(/-([a-z])/g, (match, char) => char.toUpperCase());
-};
+    return str.replace(/-([a-z])/g, (match, char) => char.toUpperCase())
+}
 
 /**
  * Helper function to directly update the global forms object
  */
 const __updateGlobalFormData = () => {
     // Skip if no window or FormChippy
-    if (typeof window === 'undefined' || !window.FormChippy) return;
-    
-    console.log('FormChippy: Updating global form data...');
-    
-    // Populate forms with all current instances and their form data 
-    window.FormChippy.forms = {};
-    
+    if (typeof window === 'undefined' || !window.FormChippy) return
+
+    console.log('FormChippy: Updating global form data...')
+
+    // Populate forms with all current instances and their form data
+    window.FormChippy.forms = {}
+
     // Get all registered instances from static property
-    const allInstances = FormChippy.instances || {};
-    console.log('FormChippy: Found registered instances:', Object.keys(allInstances));
-    
+    const allInstances = FormChippy.instances || {}
+    console.log(
+        'FormChippy: Found registered instances:',
+        Object.keys(allInstances)
+    )
+
     for (const name in allInstances) {
         if (Object.hasOwnProperty.call(allInstances, name)) {
-            const instance = allInstances[name];
-            const camelCaseName = kebabToCamelCase(name);
-            
+            const instance = allInstances[name]
+            const camelCaseName = kebabToCamelCase(name)
+
             // Get form data directly from the instance
-            const formData = typeof instance.getFormData === 'function' 
-                ? instance.getFormData() 
-                : { error: 'getFormData not available' };
-                
+            const formData =
+                typeof instance.getFormData === 'function'
+                    ? instance.getFormData()
+                    : { error: 'getFormData not available' }
+
             // Add to global forms object
             window.FormChippy.forms[camelCaseName] = {
                 instance: instance,
-                formData: formData
-            };
-            
-            console.log(`FormChippy: Added form to global FormChippy.forms: ${camelCaseName}`);
-            if (instance.debug) instance.debug.log('Added form to global FormChippy.forms:', camelCaseName);
+                formData: formData,
+            }
+
+            console.log(
+                `FormChippy: Added form to global FormChippy.forms: ${camelCaseName}`
+            )
+            if (instance.debug)
+                instance.debug.log(
+                    'Added form to global FormChippy.forms:',
+                    camelCaseName
+                )
         }
     }
-};
+}
 
 /**
  * Create a new instance manually
@@ -6549,89 +6666,106 @@ const __updateGlobalFormData = () => {
  */
 const create = (options) => {
     const instance = new FormChippy(options)
-    const containerName = instance.formName || `fc_instance_${Date.now()}`;
+    const containerName = instance.formName || `fc_instance_${Date.now()}`
     if (!FormChippy.instances) {
-        FormChippy.instances = {};
+        FormChippy.instances = {}
     }
-    FormChippy.instances[containerName] = instance; // Register instance in static list
-    if (instance.debug) instance.debug.log('Instance created and registered:', containerName);
+    FormChippy.instances[containerName] = instance // Register instance in static list
+    if (instance.debug)
+        instance.debug.log('Instance created and registered:', containerName)
 
     // Dispatch init event for manually created instances too
     const initEvent = new CustomEvent('formchippy:init', {
         detail: { name: containerName, instance: instance },
-        bubbles: true, cancelable: true
-    });
-    (instance.container || document).dispatchEvent(initEvent);
+        bubbles: true,
+        cancelable: true,
+    })
+    ;(instance.container || document).dispatchEvent(initEvent)
 
     // Update global forms object
-    __updateGlobalFormData();
-    
-    return instance;
-};
+    __updateGlobalFormData()
+
+    return instance
+}
 
 /**
  * Initialize all FormChippy instances in the document based on data attributes
  * This can be called manually if the DOM is dynamically loaded
  */
 const initAll = () => {
-    const containers = document.querySelectorAll('[data-fc-container]');
+    const containers = document.querySelectorAll('[data-fc-container]')
     // Ensure the static instances object exists on the class
     if (!FormChippy.instances) {
-        FormChippy.instances = {};
+        FormChippy.instances = {}
     }
 
     containers.forEach((container) => {
-        const containerName = container.getAttribute('data-fc-container');
+        const containerName = container.getAttribute('data-fc-container')
         // Check if an instance for this container name already exists
         if (!FormChippy.instances[containerName]) {
             // Retrieve options from data attributes
-            const options = {};
+            const options = {}
             // Make sure prototype options exist before iterating
-            const defaultOptions = FormChippy.prototype?.options || {};
+            const defaultOptions = FormChippy.prototype?.options || {}
             for (const key in defaultOptions) {
-                const dataAttr = `data-fc-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+                const dataAttr = `data-fc-${key
+                    .replace(/([A-Z])/g, '-$1')
+                    .toLowerCase()}`
                 if (container.hasAttribute(dataAttr)) {
-                    let value = container.getAttribute(dataAttr);
+                    let value = container.getAttribute(dataAttr)
                     // Basic type conversion (boolean, number)
-                    if (value === 'true') value = true;
-                    else if (value === 'false') value = false;
-                    else if (!isNaN(value) && value.trim() !== '') value = Number(value);
-                    options[key] = value;
+                    if (value === 'true') value = true
+                    else if (value === 'false') value = false
+                    else if (!isNaN(value) && value.trim() !== '')
+                        value = Number(value)
+                    options[key] = value
                 }
             }
 
             // Ensure the container itself is passed
-            options.containerElement = container;
+            options.containerElement = container
 
             // Create and register the instance
-            const instance = new FormChippy(options);
-            const instanceName = instance.formName || `fc_instance_${Date.now()}`;
+            const instance = new FormChippy(options)
+            const instanceName =
+                instance.formName || `fc_instance_${Date.now()}`
             if (!FormChippy.instances[instanceName]) {
-                FormChippy.instances[instanceName] = instance;
-                if (instance.debug) instance.debug.log('Instance auto-initialized and registered:', instanceName);
-                 // Dispatch init event
+                FormChippy.instances[instanceName] = instance
+                if (instance.debug)
+                    instance.debug.log(
+                        'Instance auto-initialized and registered:',
+                        instanceName
+                    )
+                // Dispatch init event
                 const initEvent = new CustomEvent('formchippy:init', {
                     detail: { name: instanceName, instance: instance },
-                    bubbles: true, cancelable: true
-                });
-                container.dispatchEvent(initEvent);
-
+                    bubbles: true,
+                    cancelable: true,
+                })
+                container.dispatchEvent(initEvent)
             } else if (FormChippy.instances[instanceName] !== instance) {
-                if (instance.debug) instance.debug.warn('Instance already registered with this name during initAll:', instanceName);
+                if (instance.debug)
+                    instance.debug.warn(
+                        'Instance already registered with this name during initAll:',
+                        instanceName
+                    )
             }
         } else {
-            const existingInstance = FormChippy.instances[containerName];
+            const existingInstance = FormChippy.instances[containerName]
             if (existingInstance && existingInstance.debug) {
-                existingInstance.debug.log('Skipping already registered container during initAll:', containerName);
+                existingInstance.debug.log(
+                    'Skipping already registered container during initAll:',
+                    containerName
+                )
             }
         }
-    });
+    })
 
     // Update global forms object after all instances are initialized
-    __updateGlobalFormData();
-};
+    __updateGlobalFormData()
+}
 
-// --- Global Assignment --- 
+// --- Global Assignment ---
 
 // Assign helpers and class to window.FormChippy
 if (typeof window !== 'undefined') {
@@ -6642,69 +6776,77 @@ if (typeof window !== 'undefined') {
         getInstance: getInstance,
         create: create,
         initAll: initAll,
-        refreshFormData: __updateGlobalFormData
-    };
-    
+        refreshFormData: __updateGlobalFormData,
+    }
+
     // Debug helper function to manually inspect instances
-    window.FormChippy.debugInstances = function() {
-        console.log('FormChippy Instances:', Object.keys(FormChippy.instances));
-        console.log('FormChippy Forms:', Object.keys(window.FormChippy.forms));
+    window.FormChippy.debugInstances = function () {
+        console.log('FormChippy Instances:', Object.keys(FormChippy.instances))
+        console.log('FormChippy Forms:', Object.keys(window.FormChippy.forms))
         return {
             instances: FormChippy.instances,
-            forms: window.FormChippy.forms
-        };
-    };
-    
+            forms: window.FormChippy.forms,
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Listen directly for formchippy:init events to capture forms as they initialize
     // This is the most reliable way to catch forms being created
     // -------------------------------------------------------------------------
-    document.addEventListener('formchippy:init', function(event) {
-        if (!event.detail || !event.detail.name || !event.detail.instance) return;
-        
-        const formName = event.detail.name;
-        const instance = event.detail.instance;
-        
+    document.addEventListener('formchippy:init', function (event) {
+        if (!event.detail || !event.detail.name || !event.detail.instance)
+            return
+
+        const formName = event.detail.name
+        const instance = event.detail.instance
+
         // Convert kebab-case (form-name) to camelCase (formName)
-        const camelName = formName.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
-        
+        const camelName = formName.replace(/-([a-z])/g, (_, char) =>
+            char.toUpperCase()
+        )
+
         // Add to the global forms object
         window.FormChippy.forms[camelName] = {
             instance: instance,
-            formData: instance.getFormData()
-        };
-        
+            formData: instance.getFormData(),
+        }
+
         // Also set up a form data observer if the instance has a formDataChanged event
         if (instance.on && typeof instance.on === 'function') {
             // Listen for form data changes and update the global object
-            instance.on('formDataChanged', function() {
-                window.FormChippy.forms[camelName].formData = instance.getFormData();
-            });
+            instance.on('formDataChanged', function () {
+                window.FormChippy.forms[camelName].formData =
+                    instance.getFormData()
+            })
         }
-        
+
         // Debug message if debug is enabled on this instance
         if (instance.debug) {
-            instance.debug.log(`Form '${formName}' added to global window.FormChippy.forms as '${camelName}'`);
+            instance.debug.log(
+                `Form '${formName}' added to global window.FormChippy.forms as '${camelName}'`
+            )
         }
-    });
-    
+    })
+
     // Auto-initialize on DOM load if the default setting is true
     // Check the default option value from an instance's perspective
-    const tempOptions = new FormChippy({autoInitialize: false}); // Create temp instance to read default
-    if (tempOptions.options.autoInitialize !== false) { // Check if default wasn't overridden to false
-         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', window.FormChippy.initAll);
+    const tempOptions = new FormChippy({ autoInitialize: false }) // Create temp instance to read default
+    if (tempOptions.options.autoInitialize !== false) {
+        // Check if default wasn't overridden to false
+        if (document.readyState === 'loading') {
+            document.addEventListener(
+                'DOMContentLoaded',
+                window.FormChippy.initAll
+            )
         } else {
-            window.FormChippy.initAll(); // Initialize immediately if already loaded
+            window.FormChippy.initAll() // Initialize immediately if already loaded
         }
     }
 }
 
 // Export the FormChippy class as the default for module usage
-
-
 // Export helpers for potential module usage as well
-export { getInstance, create, initAll };
+export { getInstance, create, initAll }
 
 
 

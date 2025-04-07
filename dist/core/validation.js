@@ -382,13 +382,17 @@ export class Validation {
         // --- Radio Button Handling ---
         if (input.type === 'radio') {
             if (input.checked) {
-                // For radio inputs, store the value directly to prevent nesting issues
-                // If slideId and input.name are the same, we need to handle this differently
+                // For radio inputs, always maintain an object structure for the slideId
+                // This ensures compatibility with radiofield inputs
                 if (slideId === input.name) {
-                    // Store directly in the slide object to avoid nesting
-                    this.formData[slideId] = input.value
+                    // Store in a nested object structure to avoid string/object conflicts
+                    if (typeof this.formData[slideId] !== 'object' || this.formData[slideId] === null) {
+                        this.formData[slideId] = {}
+                    }
+                    // Store with the original radio name, even when nested
+                    this.formData[slideId][input.name] = input.value
                     this.formChippy.debug.info(
-                        `Updated radio value for slide '${slideId}': ${input.value}`
+                        `Updated radio value for slide '${slideId}' with nested key '${input.name}': ${input.value}`
                     )
                 } else {
                     // Normal case - different slide ID and input name
@@ -446,6 +450,63 @@ export class Validation {
             const associatedRadio = radioFieldWrapper.querySelector(
                 'input[type="radio"]'
             )
+            
+            // Find the associated radio button within the wrapper
+            const radioName = associatedRadio ? associatedRadio.name : null;
+            const originalDataKey = dataKey;
+            
+            // Only modify the dataKey if both conditions are met:
+            // 1. No explicit data-input was provided
+            // 2. The input field name would conflict with the radio name
+            if (!input.hasAttribute('data-input') && radioName && dataKey === radioName) {
+                // Determine input type for generating proper suffix
+                let inputTypeSuffix = 'field';
+                if (input.type === 'number') {
+                    inputTypeSuffix = 'number';
+                } else if (input.type === 'text') {
+                    inputTypeSuffix = 'text';
+                } else if (input.type === 'email') {
+                    inputTypeSuffix = 'email';
+                } else if (input.type === 'tel') {
+                    inputTypeSuffix = 'tel';
+                } else if (input.type === 'date') {
+                    inputTypeSuffix = 'date';
+                } else if (input.type === 'checkbox') {
+                    inputTypeSuffix = 'checkbox';
+                } else if (input.tagName.toLowerCase() === 'textarea') {
+                    inputTypeSuffix = 'textarea';
+                } else if (input.tagName.toLowerCase() === 'select') {
+                    inputTypeSuffix = 'select';
+                }
+                
+                // Check if we need to add an index (in case of multiple inputs of same type)
+                // First, find all inputs of this type within the radiofield
+                const similarInputs = Array.from(
+                    radioFieldWrapper.querySelectorAll(
+                        input.tagName.toLowerCase() === 'select' ? 'select' :
+                        input.tagName.toLowerCase() === 'textarea' ? 'textarea' :
+                        `input[type="${input.type}"]`
+                    )
+                );
+                
+                // Get the index of this input among similar inputs
+                const index = similarInputs.indexOf(input);
+                
+                // Add index to suffix if there are multiple (index > 0 or totalCount > 1)
+                let suffix = inputTypeSuffix;
+                if (similarInputs.length > 1) {
+                    suffix = `${inputTypeSuffix}-${index + 1}`;
+                }
+                
+                // Create the new key
+                const newDataKey = `${radioName}-${suffix}`;
+                this.formChippy.debug.info(
+                    `Generated key '${newDataKey}' for input in radiofield to avoid conflict with radio name`
+                );
+                
+                // Override dataKey for the rest of this method
+                dataKey = newDataKey;
+            }
 
             if (associatedRadio && !associatedRadio.checked) {
                 // Radio NOT checked: remove this input's data if it exists
@@ -914,6 +975,7 @@ export class Validation {
                         'Please select an option'
                     )
                 } else {
+                    
                     this.formChippy.debug.warn(
                         `Could not find suitable element to display 'Please select an option' error for group ${groupName}`
                     )
@@ -1400,8 +1462,25 @@ export class Validation {
 
         // Flatten the slide-based structure into a single object
         for (const slideId in this.formData) {
-            for (const fieldName in this.formData[slideId]) {
-                flatData[fieldName] = this.formData[slideId][fieldName]
+            if (typeof this.formData[slideId] === 'object' && this.formData[slideId] !== null) {
+                // Check for special case where slideId matches the radio name
+                if (slideId in this.formData[slideId]) {
+                    // Set the slide ID value from the nested radio property
+                    flatData[slideId] = this.formData[slideId][slideId]
+                    
+                    // Include all properties including the nested value for individual access
+                    for (const fieldName in this.formData[slideId]) {
+                        flatData[fieldName] = this.formData[slideId][fieldName]
+                    }
+                } else {
+                    // Normal case - copy all properties
+                    for (const fieldName in this.formData[slideId]) {
+                        flatData[fieldName] = this.formData[slideId][fieldName]
+                    }
+                }
+            } else {
+                // Direct value (for backwards compatibility)
+                flatData[slideId] = this.formData[slideId]
             }
         }
 

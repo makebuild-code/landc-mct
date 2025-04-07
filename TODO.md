@@ -14,7 +14,6 @@
 -   JS API example of running code before and after slide navigation
 -   JSON of input values to be sent to API
 -   donut bar should work even if progress bar element is not present
--   if there is an error in the inputs of the content element, add `.error` class
 -   by default during slide transition animation, don't take in other navigation requests to prevent errors
 
 ## Bug Fixes
