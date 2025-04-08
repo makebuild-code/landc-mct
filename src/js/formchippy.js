@@ -67,6 +67,7 @@ import { DateInput } from './questions/date.js'
 class FormChippy {
     // Static property to hold all instances
     static instances = {}
+   
 
     constructor(options = {}) {
         // Default options

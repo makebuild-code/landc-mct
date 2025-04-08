@@ -939,9 +939,9 @@ export class Validation {
                         this.formChippy.debug.info(
                             `Clearing errors for ${item.inputFields.length} inputs in unselected radiofield (value: ${item.radio.value}) of failed group '${groupName}'`
                         )
-                        item.inputFields.forEach((input) =>
+                       /*item.inputFields.forEach((input) =>
                             this.clearInputError(input)
-                        )
+                        )*/
                     }
                 })
                 return // Skip to the next group
@@ -988,9 +988,10 @@ export class Validation {
                         this.formChippy.debug.info(
                             `Clearing errors for ${item.inputFields.length} inputs in unselected radiofield (value: ${item.radio.value}) of failed group '${groupName}'`
                         )
-                        item.inputFields.forEach((input) =>
+                        // In Groups: this is causing validation errors
+                        /*item.inputFields.forEach((input) =>
                             this.clearInputError(input)
-                        )
+                        )*/
                     }
                 })
 
@@ -1062,7 +1063,7 @@ export class Validation {
                                 this.options.errorClass
                             )
                         ) {
-                            this.toggleContentError(input, false) // Use input context to find correct error message span
+                           this.toggleContentError(input, false) // Use input context to find correct error message span
                         }
                     })
                 }

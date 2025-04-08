@@ -137,6 +137,7 @@ class Navigation {
             // Remove existing click listeners by replacing the button
             const newButton = button.cloneNode(true);
             button.parentNode.replaceChild(newButton, button);
+
             
             // Add the simplified event listener
             newButton.addEventListener('click', (e) => {
@@ -1702,9 +1703,9 @@ class Validation {
                         this.formChippy.debug.info(
                             `Clearing errors for ${item.inputFields.length} inputs in unselected radiofield (value: ${item.radio.value}) of failed group '${groupName}'`
                         )
-                        item.inputFields.forEach((input) =>
+                       /*item.inputFields.forEach((input) =>
                             this.clearInputError(input)
-                        )
+                        )*/
                     }
                 })
                 return // Skip to the next group
@@ -1751,9 +1752,10 @@ class Validation {
                         this.formChippy.debug.info(
                             `Clearing errors for ${item.inputFields.length} inputs in unselected radiofield (value: ${item.radio.value}) of failed group '${groupName}'`
                         )
-                        item.inputFields.forEach((input) =>
+                        // In Groups: this is causing validation errors
+                        /*item.inputFields.forEach((input) =>
                             this.clearInputError(input)
-                        )
+                        )*/
                     }
                 })
 
@@ -1825,7 +1827,7 @@ class Validation {
                                 this.options.errorClass
                             )
                         ) {
-                            this.toggleContentError(input, false) // Use input context to find correct error message span
+                           this.toggleContentError(input, false) // Use input context to find correct error message span
                         }
                     })
                 }
@@ -5137,6 +5139,7 @@ class DateInput {
 window.FormChippy = class FormChippy {
     // Static property to hold all instances
     static instances = {}
+   
 
     constructor(options = {}) {
         // Default options

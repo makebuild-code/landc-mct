@@ -87,6 +87,7 @@ export class Navigation {
             // Remove existing click listeners by replacing the button
             const newButton = button.cloneNode(true);
             button.parentNode.replaceChild(newButton, button);
+
             
             // Add the simplified event listener
             newButton.addEventListener('click', (e) => {
