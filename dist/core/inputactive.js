@@ -39,15 +39,37 @@ export class InputActive {
     }
 
     /**
+     * Format numbers with commas
+     * @private
+     */
+    _formatWithCommas(value) {
+
+        const number = parseFloat(value.toString().replace(/,/g, ''));
+        if (isNaN(number)) return value;
+        return number.toLocaleString('en-GB'); // or 'en-US' if you prefer
+    }
+
+    /**
      * Set up event listeners for input changes
      * @private
      */
     _setupEventListeners() {
         // Listen for changes on the entire form to catch all input changes
         this.formChippy.container.addEventListener('change', (event) => {
+           
             const { target } = event
-            if (target instanceof HTMLInputElement) {
-                this._updateInputState(target)
+            if (
+                target instanceof HTMLInputElement &&
+                target.type === 'text' &&
+                target.getAttribute('formattednumber') === 'true'
+              ) {
+                // Format value with commas
+                target.value = this._formatWithCommas(target.value);
+            
+                // Update input state (if needed)
+                this._updateInputState(target);
+            } else if (target instanceof HTMLInputElement) {
+                this._updateInputState(target);
             }
         })
 

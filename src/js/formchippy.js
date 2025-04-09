@@ -190,6 +190,8 @@ class FormChippy {
      */
     _init() {
         // Get main elements
+
+
         this.container = document.querySelector(this.options.containerSelector)
         if (!this.container) {
             console.error('FormChippy: Container not found')
@@ -1590,6 +1592,7 @@ const __updateGlobalFormData = () => {
     }
 }
 
+
 /**
  * Create a new instance manually
  * @param {Object} options - FormChippy options
@@ -1618,6 +1621,8 @@ const create = (options) => {
 
     return instance
 }
+
+
 
 /**
  * Initialize all FormChippy instances in the document based on data attributes

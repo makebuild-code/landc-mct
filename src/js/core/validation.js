@@ -776,6 +776,28 @@ export class Validation {
             return false
         }
 
+        // Remove commas for number validation
+        const rawValue = trimmedValue.replace(/,/g, '');
+        const numberValue = parseFloat(rawValue);
+
+        // Validate number range if the input is of type "number"
+        if (input.hasAttribute('min') && input.hasAttribute('max')) {
+            const min = input.hasAttribute('min') ? parseFloat(input.getAttribute('min')) : -Infinity;
+            const max = input.hasAttribute('max') ? parseFloat(input.getAttribute('max')) : Infinity;
+            // Check if the value is within the specified range
+            if (numberValue < min || numberValue > max) {
+                this.formChippy.debug.info(
+                    `[validateInput] Input value (${numberValue}) is out of range [${min}, ${max}], validation FAILED`
+                );
+                this.showInputError(
+                    elementToApplyError,
+                    `Value must be between ${min} and ${max}`
+                );
+                this.toggleContentError(input, true, `Value must be between ${min} and ${max}`);
+                return false;
+            }
+        }
+
         this.formChippy.debug.info(`[validateInput] Input passed basic validation.`) // Assuming more complex validation could go here
         // All other validation is skipped per requirements
         return true
