@@ -5284,8 +5284,8 @@ window.FormChippy = class FormChippy {
      */
     _init() {
         // Get main elements
-
-
+       // const test = submitProducts();
+        //console.log(test)
         this.container = document.querySelector(this.options.containerSelector)
         if (!this.container) {
             console.error('FormChippy: Container not found')
@@ -6723,6 +6723,7 @@ const create = (options) => {
  * This can be called manually if the DOM is dynamically loaded
  */
 const initAll = () => {
+
     const containers = document.querySelectorAll('[data-fc-container]')
     // Ensure the static instances object exists on the class
     if (!FormChippy.instances) {
