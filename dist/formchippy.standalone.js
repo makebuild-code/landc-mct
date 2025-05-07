@@ -2955,16 +2955,16 @@ class Debug {
             
             switch (level) {
                 case 'debug':
-                    console.debug(`[FormChippy Debug] ${message}`, data || '');
+                    //console.debug(`[FormChippy Debug] ${message}`, data || '');
                     break;
                 case 'info':
-                    console.info(`[FormChippy Info] ${message}`, data || '');
+                    //console.info(`[FormChippy Info] ${message}`, data || '');
                     break;
                 case 'warn':
-                    console.warn(`[FormChippy Warning] ${message}`, data || '');
+                    //console.warn(`[FormChippy Warning] ${message}`, data || '');
                     break;
                 case 'error':
-                    console.error(`[FormChippy Error] ${message}`, data || '');
+                    //console.error(`[FormChippy Error] ${message}`, data || '');
                     break;
             }
         }
@@ -5159,6 +5159,8 @@ class DateInput {
 
 
 
+
+
 window.FormChippy = class FormChippy {
     // Static property to hold all instances
     static instances = {}
@@ -5288,8 +5290,6 @@ window.FormChippy = class FormChippy {
      */
     _init() {
         // Get main elements
-       // const test = submitProducts();
-        //console.log(test)
         this.container = document.querySelector(this.options.containerSelector)
         if (!this.container) {
             console.error('FormChippy: Container not found')
@@ -5417,13 +5417,27 @@ window.FormChippy = class FormChippy {
         if (this.persistence && this.validation) {
             // Get the saved data - our persistence module will automatically handle
             // both old and new data formats and return just the form data portion
-            const savedData = this.persistence.loadFormData(this.formName)
+            const savedData = this.persistence.loadFormData(this.formName);
+            
+            //this.persistence.applySavedDataToAllForms(this.formName);
+
             if (savedData) {
+                alert('Loading Saved Data')
+                
                 this.validation.formData = savedData
                 this.debug.info(
                     `Loaded saved form data for form: ${this.formName}`,
                     savedData
                 )
+
+                // -- Apply FormData to fields
+                data_applySavedFormData(savedData);
+
+                // -- Remove any Loading Processing from Form
+                adjustor_showElement('button-results', false);
+                adjustor_showLoading('loader', false);
+                adjustor_showLoading('buttons', true);
+                
 
                 // Trigger an event so extensions can react to the loaded data
                 this.trigger('formDataLoaded', {
@@ -6508,6 +6522,9 @@ window.FormChippy = class FormChippy {
 
             // Log the navigation attempt with source of truth
             const slideId = currentSlide.getAttribute('data-fc-slide')
+            if(slideId !== 'summary'){
+                adjustor_showElement('button-results', false);
+            }
             this.debug.info(`Prev() method called from slide ${slideId}`, {
                 currentIndex: currentIndex,
                 targetIndex: prevIndex,

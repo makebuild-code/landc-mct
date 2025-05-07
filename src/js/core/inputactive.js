@@ -3,18 +3,24 @@
  * Adds active state classes to form elements when they are checked/selected
  * Inspired by Finsweet's InputActive attribute
  */
+import { Persistence } from './persistence.js'
 
 export class InputActive {
     constructor(formChippy) {
+        this.parent = formChippy
         this.formChippy = formChippy
         this.options = formChippy.options
 
         // Default class name for active elements
         // this.activeClass = 'is-active-input';
-        this.activeClass = 'checked'
+        this.activeClass = 'checked';
+        this.persistence = null
 
         // Initialize
         this._init()
+
+        // Bind Update Buttons
+        this._bindUpdateButtons()
     }
 
     /**
@@ -26,7 +32,8 @@ export class InputActive {
         this._processAllInputs()
 
         // Set up change event listeners
-        this._setupEventListeners()
+        this._setupEventListeners();
+        this.persistence = new Persistence(this)
     }
 
     /**
@@ -43,10 +50,9 @@ export class InputActive {
      * @private
      */
     _formatWithCommas(value) {
-
-        const number = parseFloat(value.toString().replace(/,/g, ''));
-        if (isNaN(number)) return value;
-        return number.toLocaleString('en-GB'); // or 'en-US' if you prefer
+        const number = parseFloat(value);
+        if (isNaN(number)) return value; 
+        return number.toLocaleString('en-UK');  // or 'en-US' if you prefer
     }
 
     /**
@@ -56,8 +62,8 @@ export class InputActive {
     _setupEventListeners() {
         // Listen for changes on the entire form to catch all input changes
         this.formChippy.container.addEventListener('change', (event) => {
-           
-            const { target } = event
+          
+            const { target } = event;
             if (
                 target instanceof HTMLInputElement &&
                 target.type === 'text' &&
@@ -101,11 +107,12 @@ export class InputActive {
         } else if (input.type === 'radio') {
             // For radio buttons, handle all related inputs with the same name
             const name = input.name
-            if (!name) return
-
-            const radios = this.formChippy.container.querySelectorAll(
-                `input[type="radio"][name="${name}"]`
-            )
+            if (!name) return;
+            const radios = document.querySelectorAll(`input[type="radio"][name="${name}"]`);
+                //`input[type="radio"][name="${name}"]`
+            //)//this.formChippy.container.querySelectorAll(
+                //`input[type="radio"][name="${name}"]`
+            //)
             radios.forEach((radio) => {
                 const container = this._getInputContainer(radio)
                 if (container) {
@@ -179,6 +186,24 @@ export class InputActive {
         } else {
             element.classList.remove(className)
         }
+    }
+
+    _bindUpdateButtons() {
+        const buttons = document.querySelectorAll('[data-form-update]')
+
+        buttons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                //alert('clicked')
+                this._handleUpdateClick(event, button)
+            })
+        })
+    }
+
+    _handleUpdateClick(event, button) {
+        event.preventDefault()
+        const savedData = this.persistence.loadFormData(this.formChippy.formName);
+
+        applySavedFormData(savedData);
     }
 
     /**

@@ -102,11 +102,7 @@ export class Persistence {
             
             const key = this.getStorageKey(formName);
             console.log('getformNameKey:', key);
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i); // Get the key by index
-                const value = localStorage.getItem(key); // Get the value
-                console.log(`Key: ${key}`, value);
-              }
+            
             
             // Check if data exists
             const storedData = localStorage.getItem(key);
@@ -156,6 +152,32 @@ export class Persistence {
             this.formChippy.debug?.error('Error loading form data from localStorage:', error);
             return null;
         }
+    }
+
+    /**
+     * Clear form data from localStorage
+     * @param {string} formName - The form name (or null to clear all)
+     */
+
+    applySavedDataToAllForms(formName) {
+        const savedData = this.loadFormData(formName)
+        if (!savedData) return
+    
+        const containers = document.querySelectorAll(`[data-fc-container="${formName}"]`)
+    
+        containers.forEach(container => {
+            const instance = container.formChippyInstance
+            if (instance && instance.validation) {
+                instance.validation.formData = savedData
+                instance.trigger('formDataLoaded', {
+                    formName,
+                    formData: savedData
+                })
+    
+                instance._updateAllInputStates?.()
+                instance.debug?.info(`Applied saved data to: ${formName}`, savedData)
+            }
+        })
     }
     
     /**

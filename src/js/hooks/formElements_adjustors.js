@@ -123,5 +123,22 @@ export function adjustor_showHiddenFields() {
       return valA - valB; // Ascending (low to high)
     });
   }
+
+  export function adjustor_showLoading(name, show){
+    const container = document.querySelector(`[data-fc-form-loading="${name}"]`);
+
+    container.style.display = show ? 'flex' : 'none';
+  
+  }
+
+  export function adjustor_showElement(name, show) {
+    const containers = document.querySelectorAll(`[data-fc-element="${name}"]`);
+    
+    containers.forEach(container => {
+      container.style.display = show ? 'flex' : 'none';
+    });
+  }
+
+
   
   

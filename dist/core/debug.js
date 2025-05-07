@@ -371,16 +371,16 @@ export class Debug {
             
             switch (level) {
                 case 'debug':
-                    console.debug(`[FormChippy Debug] ${message}`, data || '');
+                    //console.debug(`[FormChippy Debug] ${message}`, data || '');
                     break;
                 case 'info':
-                    console.info(`[FormChippy Info] ${message}`, data || '');
+                    //console.info(`[FormChippy Info] ${message}`, data || '');
                     break;
                 case 'warn':
-                    console.warn(`[FormChippy Warning] ${message}`, data || '');
+                    //console.warn(`[FormChippy Warning] ${message}`, data || '');
                     break;
                 case 'error':
-                    console.error(`[FormChippy Error] ${message}`, data || '');
+                    //console.error(`[FormChippy Error] ${message}`, data || '');
                     break;
             }
         }

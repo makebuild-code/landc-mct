@@ -2,7 +2,7 @@ import { getProductsMCT } from "../apis/api_ProductsMCTHttpTrigger.js";
 import { flattenData } from "../data/flattenData.js";
 import { data_populateOutputValues } from "../data/outputData.js";
 import { table_noResults, table_renderResults } from "../data/tableData.js";
-import { adjustor_formatNumberWithCommas, adjustor_groupLenders, adjustor_hideLoaders, adjustor_rateSorter, adjustor_resultSorter, adjustor_showHiddenFields, adjustor_syncForms } from "./formElements_adjustors.js";
+import { adjustor_formatNumberWithCommas, adjustor_groupLenders, adjustor_hideLoaders, adjustor_rateSorter, adjustor_resultSorter, adjustor_showElement, adjustor_showHiddenFields, adjustor_syncForms } from "./formElements_adjustors.js";
 
 export async function submitProducts(formData) {
     
@@ -89,14 +89,11 @@ export async function submitProducts(formData) {
        }
   
     const result = await getProductsMCT(inputPayload);
-    if (result) {
-      console.log("MCT Products:", result);
+    if (result.Products.length > 1) {
+      console.log("MCT Products:", result.Products);
 
       adjustor_syncForms(flattenForm);
 
-      const noOfLenders = adjustor_groupLenders(result);
-      const lowestRate = adjustor_rateSorter(result);
-      const sortedResult = adjustor_resultSorter(result, 'Rate');
 
       // adjust Results
       const isEligable = (
@@ -104,12 +101,13 @@ export async function submitProducts(formData) {
         flattenForm['search-stage'] === 'offer-accepted'
       ) ? true : false;
 
+
       // Adjust the Single Result section
-      flattenForm['ltv'] = result[0].LTV;
-      flattenForm['number-of-lenders'] = noOfLenders;
-      flattenForm['number-of-products'] = result.length;
-      flattenForm['lowest-rate'] = lowestRate;
-      flattenForm['we-have-found'] = `We have found ${result.length} products from ${noOfLenders} Lenders`;
+      flattenForm['ltv'] = result.Products[0].LTV;
+      flattenForm['number-of-lenders'] = result.SummaryInfo.NumberOfLenders;
+      flattenForm['number-of-products'] = result.SummaryInfo.NumberOfProducts;
+      flattenForm['lowest-rate'] = result.SummaryInfo.LowestRate;
+      flattenForm['we-have-found'] = `We have found ${result.SummaryInfo.NumberOfProducts} products from ${result.SummaryInfo.NumberOfLenders} Lenders`;
 
       // Add Commas to Monetary values
       flattenForm['property-value'] = adjustor_formatNumberWithCommas(flattenForm['property-value']);
@@ -122,14 +120,18 @@ export async function submitProducts(formData) {
       data_populateOutputValues(flattenForm);
 
       // Populate Results
-      table_renderResults(sortedResult, isEligable);
+      table_renderResults(result.Products, isEligable);
 
-      localStorage.setItem('product_results', sortedResult);
+      localStorage.setItem('product_results', result.Products);
       localStorage.setItem('form_results', flattenForm);
       localStorage.setItem('is_eligable', isEligable);
-
+      adjustor_showElement('button-results', true);
 
     }else{
+      flattenForm['we-have-found'] = 'We could not match you with a lender, please try again';
+      data_populateOutputValues(flattenForm);
+      adjustor_hideLoaders('spinner-product');
+      adjustor_showElement('button-results', false);
       table_noResults()
     }
   }
