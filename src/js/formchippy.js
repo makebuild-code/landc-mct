@@ -63,13 +63,14 @@ import { ToggleInput } from './questions/toggle.js'
 import { FileInput } from './questions/file.js'
 import { TextareaInput } from './questions/textarea.js'
 import { DateInput } from './questions/date.js'
+import { submitProducts } from './hooks/formData_submitProducts.js'
 
 class FormChippy {
     // Static property to hold all instances
     static instances = {}
    
 
-    constructor(options = {}) {
+    constructor(options = {}, formChippy) {
         // Default options
         this.options = {
             containerSelector: '[data-fc-container]',
@@ -114,6 +115,9 @@ class FormChippy {
 
         // Initialize
         this._init()
+
+        // Form Data
+        this.formChippy = formChippy;
     }
 
     /**
@@ -1312,6 +1316,11 @@ class FormChippy {
                         toIndex: index,
                         slideId: targetSlideId,
                     })
+
+                   // Last Slide - Submit the Form Data to API
+                   if(targetSlideId === 'summary'){
+                        submitProducts(this.persistence.loadFormData(this.formName))
+                   }
 
                     // Force button state update after animation completes
                     this.navigation.updateButtonStates(index)

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../constants/api.js";
 export async function getLogEvents(inputData) {
     try {
       const response = await fetch(API_BASE_URL+'/api/LogEventHttpTrigger', {

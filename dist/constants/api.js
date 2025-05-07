@@ -1,2 +1,2 @@
-export const API_BASE_URL = 'https://test.landc.co.uk/api/';
+export const API_BASE_URL = 'https://dev.landc.co.uk';
 

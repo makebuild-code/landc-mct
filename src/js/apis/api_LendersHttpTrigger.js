@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../constants/api.js";
 export async function getLenderEvents() {
     try {
       const response = await fetch(API_BASE_URL+'/api/LendersHttpTrigger', {

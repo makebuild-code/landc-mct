@@ -1,8 +1,9 @@
-import { API_BASE_URL } from "../constants/api";
+import { API_BASE_URL } from "../constants/api.js";
 
 export async function getProductsMCT(inputData) {
     try {
-      const response = await fetch(API_BASE_URL+'/api/getProductsMCT', {
+        console.log('INPUT PAYLOAD', inputData)
+      const response = await fetch(API_BASE_URL+'/api/productshttptrigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(inputData),
@@ -10,11 +11,11 @@ export async function getProductsMCT(inputData) {
   
       const result = await response.json();
   
-      if (!response.ok) {
+      if (!result.result.success) {
         throw new Error(result.error || 'API call failed'); 
       }
   
-      return result;
+      return result.result.data;
     } catch (err) {
       console.error('Failed to get mortgage products:', err);
       return null;

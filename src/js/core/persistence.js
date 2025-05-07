@@ -26,6 +26,12 @@ export class Persistence {
         return this.storageKeyPrefix + validFormName;
     }
 
+    getLCIDKey(formName) {
+        // Make sure we always have a valid form name, falling back to FormChippy instance name if available
+        const validFormName = formName || this.formChippy.name || 'default';
+        return this.storageKeyPrefix + validFormName;
+    }
+
     /**
      * Save form data to localStorage
      * @param {string} formName - The form name
@@ -93,7 +99,14 @@ export class Persistence {
      */
     loadFormData(formName, rawFormat = false) {
         try {
+            
             const key = this.getStorageKey(formName);
+            console.log('getformNameKey:', key);
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i); // Get the key by index
+                const value = localStorage.getItem(key); // Get the value
+                console.log(`Key: ${key}`, value);
+              }
             
             // Check if data exists
             const storedData = localStorage.getItem(key);
