@@ -1,4 +1,5 @@
 import { getProductsMCT } from "../apis/api_ProductsMCTHttpTrigger.js";
+import { DialogManager } from "../core/dialog.js";
 import { flattenData } from "../data/flattenData.js";
 import { data_populateOutputValues } from "../data/outputData.js";
 import { table_noResults, table_initRender } from "../data/tableData.js";
@@ -117,13 +118,17 @@ export async function submitProducts(formData) {
       flattenForm['borrow-amount'] = adjustor_formatNumberWithCommas(flattenForm['borrow-amount']);
       flattenForm['deposit-amount'] = adjustor_formatNumberWithCommas(flattenForm['deposit-amount']);
 
-      adjustor_showHiddenFields();
+      adjustor_showHiddenFields('show');
       adjustor_hideLoaders('spinner-product');
       
       data_populateOutputValues(flattenForm);
 
       // Populate Results
       table_initRender(result.Products, isEligable);
+
+      // refresh dialogs for new products
+      const dialogManager = new DialogManager({ debug: true });
+        dialogManager.callDialogs();
 
       localStorage.setItem('product_results', result.Products);
       localStorage.setItem('form_results', flattenForm);

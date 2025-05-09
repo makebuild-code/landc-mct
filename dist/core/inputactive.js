@@ -3,10 +3,11 @@
  * Adds active state classes to form elements when they are checked/selected
  * Inspired by Finsweet's InputActive attribute
  */
-import { getProductsMCT } from '../apis/api_ProductsMCTHttpTrigger.js';
+
 import { handleLoadMoreClick } from '../data/tableData.js';
 import { data_applySavedFormData, data_cloneForm } from '../hooks/formData_savedData.js';
 import { submitProducts } from '../hooks/formData_submitProducts.js';
+import { adjustor_showHiddenFields } from '../hooks/formElements_adjustors.js';
 import { Persistence } from './persistence.js'
 
 export class InputActive {
@@ -200,8 +201,7 @@ export class InputActive {
                 this._handleUpdateClick(event, button)
             })
         })
-        
-
+    
         document.addEventListener('DOMContentLoaded', () => {
             const sortProducts = document.querySelector('[data-input="SortColumn"]');
             

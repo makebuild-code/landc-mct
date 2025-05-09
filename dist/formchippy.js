@@ -65,7 +65,8 @@ import { TextareaInput } from './questions/textarea.js'
 import { DateInput } from './questions/date.js'
 import { submitProducts } from './hooks/formData_submitProducts.js'
 import { data_applySavedFormData } from './hooks/formData_savedData.js'
-import { adjustor_showElement, adjustor_showLoading } from './hooks/formElements_adjustors.js'
+import { adjustor_showElement, adjustor_showHiddenFields, adjustor_showLoading } from './hooks/formElements_adjustors.js'
+import { DialogManager } from './core/dialog.js'
 
 class FormChippy {
     // Static property to hold all instances
@@ -195,22 +196,27 @@ class FormChippy {
      * @private
      */
     _init() {
-
+        // TO DO - trying to find ICID to use for LCID
         // Local Storage
-console.log('--- Local Storage ---');
-for (let i = 0; i < localStorage.length; i++) {
-  const key = localStorage.key(i);
-  const value = localStorage.getItem(key);
-  console.log(`${key}:`, value);
-}
+        console.log('--- Local Storage ---');
+        for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+        console.log(`${key}:`, value);
+        }
 
-// Session Storage
-console.log('--- Session Storage ---');
-for (let i = 0; i < sessionStorage.length; i++) {
-  const key = sessionStorage.key(i);
-  const value = sessionStorage.getItem(key);
-  console.log(`${key}:`, value);
-}
+        // Session Storage
+        console.log('--- Session Storage ---');
+        for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        const value = sessionStorage.getItem(key);
+        console.log(`${key}:`, value);
+        }
+
+        // -- Controls all popups
+        const dialogManager = new DialogManager({ debug: true });
+        dialogManager.init();
+
         // Get main elements
         this.container = document.querySelector(this.options.containerSelector)
         if (!this.container) {
@@ -1349,6 +1355,9 @@ for (let i = 0; i < sessionStorage.length; i++) {
                    // Last Slide - Submit the Form Data to API
                    if(targetSlideId === 'summary'){
                         submitProducts(this.persistence.loadFormData(this.formName))
+                   }else{
+                        // Hide Summary
+                        adjustor_showHiddenFields('close');
                    }
 
                     // Force button state update after animation completes

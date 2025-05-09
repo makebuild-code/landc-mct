@@ -1,31 +1,48 @@
-export function adjustor_showHiddenFields() {
+export function adjustor_showHiddenFields(toggle) {
   const elements = document.querySelectorAll('[data-output-hide]');
 
   elements.forEach(el => {
-    // Measure full height before making it visible
-    el.style.height = 'auto';
-    const fullHeight = el.scrollHeight + 'px';
+    const isHidden = el.getAttribute('data-visible') !== 'true';
 
-    // Reset to 0 to enable transition
-    el.style.height = '0px';
-    el.style.opacity = '0';
-    el.style.overflow = 'hidden';
-
-    // Trigger reflow
-    void el.offsetWidth;
-
-    // Now animate to full height and opacity
-    el.style.transition = 'opacity 1s ease, height 1s ease';
-    el.style.height = fullHeight;
-    el.style.opacity = '1';
-
-    // Cleanup: let it sit at auto height after transition
-    el.addEventListener('transitionend', () => {
+    if (toggle === 'show') {
+      // Show element
       el.style.height = 'auto';
-      el.style.overflow = 'visible';
-    }, { once: true });
+      const fullHeight = el.scrollHeight + 'px';
+      el.style.height = '0px';
+      el.style.opacity = '0';
+      el.style.overflow = 'hidden';
+
+      void el.offsetWidth; // trigger reflow
+
+      el.style.transition = 'opacity 1s ease, height 1s ease';
+      el.style.height = fullHeight;
+      el.style.opacity = '1';
+
+      el.addEventListener('transitionend', () => {
+        el.style.height = 'auto';
+        el.style.overflow = 'visible';
+      }, { once: true });
+
+    } else {
+      // Hide element
+      const currentHeight = el.scrollHeight + 'px';
+      el.style.height = currentHeight;
+      el.style.opacity = '1';
+      el.style.overflow = 'hidden';
+
+      void el.offsetWidth; // trigger reflow
+
+      el.style.transition = 'opacity 1s ease, height 1s ease';
+      el.style.height = '0px';
+      el.style.opacity = '0';
+
+      el.addEventListener('transitionend', () => {
+        el.style.overflow = 'hidden';
+      }, { once: true });
+    }
   });
 }
+
 
 
   export function adjustor_hideLoaders(spinnerName) {
