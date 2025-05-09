@@ -7,7 +7,8 @@ export function data_applySavedFormData(savedData) {
 }
   
 function data_applySavedDataToSlide(slideId, fields) {
-    const slides = document.querySelector(`[data-fc-slide="${slideId}"]`);
+    const slides = document.querySelectorAll(`[data-fc-slide="${slideId}"]`);
+    console.log('SLIIIDDEESS', slides);
     if (!slides.length) return;
   
     slides.forEach((slide) => {
@@ -40,8 +41,10 @@ function data_applySavedDataToSlide(slideId, fields) {
     const targetContainer = document.querySelector(`[data-form-copy="${formName}"]`);
   
     if (!originalForm || !targetContainer) return;
-  
+    console.log(originalForm);
+    console.log('TargetContainer', targetContainer)
     const clonedForm = originalForm.cloneNode(true); // Deep clone including children
+    console.log('cloned',clonedForm)
     targetContainer.appendChild(clonedForm);
   }
   

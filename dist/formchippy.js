@@ -328,7 +328,6 @@ class FormChippy {
             //this.persistence.applySavedDataToAllForms(this.formName);
 
             if (savedData) {
-                alert('Loading Saved Data')
                 
                 this.validation.formData = savedData
                 this.debug.info(

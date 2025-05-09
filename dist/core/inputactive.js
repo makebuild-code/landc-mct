@@ -3,6 +3,10 @@
  * Adds active state classes to form elements when they are checked/selected
  * Inspired by Finsweet's InputActive attribute
  */
+import { getProductsMCT } from '../apis/api_ProductsMCTHttpTrigger.js';
+import { handleLoadMoreClick } from '../data/tableData.js';
+import { data_applySavedFormData, data_cloneForm } from '../hooks/formData_savedData.js';
+import { submitProducts } from '../hooks/formData_submitProducts.js';
 import { Persistence } from './persistence.js'
 
 export class InputActive {
@@ -189,21 +193,54 @@ export class InputActive {
     }
 
     _bindUpdateButtons() {
-        const buttons = document.querySelectorAll('[data-form-update]')
-
+        const buttons = document.querySelectorAll(`[data-form-update=${this.formChippy.formName}]`)
+        // Form changes update
         buttons.forEach(button => {
             button.addEventListener('click', (event) => {
-                //alert('clicked')
                 this._handleUpdateClick(event, button)
             })
         })
+        
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const sortProducts = document.querySelector('[data-input="SortColumn"]');
+            
+            if (sortProducts) {
+              const getStoredValue = localStorage.getItem('sortProducts');
+              if (getStoredValue) {
+                sortProducts.value = getStoredValue;
+              }
+              sortProducts.addEventListener('change', (event) => {
+                
+                const selectedValue = event.target.value;
+                
+                sortProducts.value = selectedValue;
+
+                localStorage.setItem('sortProducts', selectedValue);
+
+                const savedData = this.persistence.loadFormData(this.formChippy.formName);
+                
+                data_applySavedFormData(savedData);
+                submitProducts(savedData);
+              });
+            } else {
+              console.warn('SortColumn select not found');
+            }
+          });
+
+        // Load More Products
+
+        document.querySelector('[data-fc-element=feed-load-more]')?.addEventListener('click', handleLoadMoreClick)
+
+
     }
 
     _handleUpdateClick(event, button) {
         event.preventDefault()
         const savedData = this.persistence.loadFormData(this.formChippy.formName);
-
-        applySavedFormData(savedData);
+        //data_cloneForm(this.formChippy.formName);
+        data_applySavedFormData(savedData);
+        //submitProducts(savedData);
     }
 
     /**

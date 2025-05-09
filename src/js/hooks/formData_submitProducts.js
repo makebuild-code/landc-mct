@@ -1,8 +1,9 @@
 import { getProductsMCT } from "../apis/api_ProductsMCTHttpTrigger.js";
 import { flattenData } from "../data/flattenData.js";
 import { data_populateOutputValues } from "../data/outputData.js";
-import { table_noResults, table_renderResults } from "../data/tableData.js";
-import { adjustor_formatNumberWithCommas, adjustor_groupLenders, adjustor_hideLoaders, adjustor_rateSorter, adjustor_resultSorter, adjustor_showElement, adjustor_showHiddenFields, adjustor_syncForms } from "./formElements_adjustors.js";
+import { table_noResults, table_initRender } from "../data/tableData.js";
+import { data_applySavedFormData } from "./formData_savedData.js";
+import { adjustor_formatNumberWithCommas, adjustor_hideLoaders, adjustor_showElement, adjustor_showHiddenFields, adjustor_syncForms } from "./formElements_adjustors.js";
 
 export async function submitProducts(formData) {
     
@@ -51,6 +52,8 @@ export async function submitProducts(formData) {
 
     */
 
+    const sortColumn = localStorage.getItem('sortProducts');
+
     // -- Scheme Types
     let schemeTypes = [];
 
@@ -83,7 +86,7 @@ export async function submitProducts(formData) {
                 "Offset": false,
                 "NewBuild": false
              },
-             "SortColumn": "1",
+             "SortColumn": sortColumn ? sortColumn : 1,
              "UseStaticApr": false
           }
        }
@@ -120,12 +123,14 @@ export async function submitProducts(formData) {
       data_populateOutputValues(flattenForm);
 
       // Populate Results
-      table_renderResults(result.Products, isEligable);
+      table_initRender(result.Products, isEligable);
 
       localStorage.setItem('product_results', result.Products);
       localStorage.setItem('form_results', flattenForm);
       localStorage.setItem('is_eligable', isEligable);
       adjustor_showElement('button-results', true);
+      
+      data_applySavedFormData(flattenForm);
 
     }else{
       flattenForm['we-have-found'] = 'We could not match you with a lender, please try again';
