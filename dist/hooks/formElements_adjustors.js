@@ -62,7 +62,6 @@ export function adjustor_showHiddenFields() {
   export function adjustor_formatNumberWithCommas(value) {
     const number = parseFloat(value);
     if (isNaN(number)) return value; 
-  
     return number.toLocaleString('en-UK'); 
   }
 

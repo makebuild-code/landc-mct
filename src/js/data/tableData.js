@@ -1,3 +1,6 @@
+import { adjustor_formatNumberWithCommas } from "../hooks/formElements_adjustors.js"
+
+
 let savedData = []  // full dataset
 let renderOffset = 0
 const renderLimit = 10
@@ -94,6 +97,9 @@ function table_renderResults(data, isEligable) {
     const outputFields = clone.querySelectorAll('[data-output-value]');
     outputFields.forEach(el => {
       const key = el.getAttribute('data-output-value');
+      const formattedNumber = el.getAttribute('formattednumber')
+
+      
 
       // Special case for SchemeFee
       if (key === 'SchemeFee') {
@@ -112,8 +118,11 @@ function table_renderResults(data, isEligable) {
         if (el.tagName.toLowerCase() === 'img') {
           el.src = item[key];
         } else {
-
-            el.textContent = item[key];
+            if(key === 'AnnualCost' || key === 'FutureMonthlyPayment'){
+                el.textContent =  adjustor_formatNumberWithCommas(item[key]);
+            }else{
+                el.textContent = item[key];
+            }
           
         }
       }
