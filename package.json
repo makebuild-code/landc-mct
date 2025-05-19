@@ -1,14 +1,13 @@
 {
-  "name": "formchippy",
-  "version": "1.5.3",
+  "name": "makebuildform",
+  "version": "1.0.0",
   "description": "A smooth, vertical scrolling multi-step form experience",
-  "main": "dist/formchippy.js",
+  "main": "dist/mbf.js",
   "scripts": {
     "dev": "http-server -p 5500 -c-1 --cors",
-    "build": "mkdir -p dist/css && cp -r src/js/* dist/ && cp -r src/css dist/ && node scripts/build-standalone.js",
-    "build:standalone": "node scripts/build-standalone.js",
+    "build": "mkdir -p dist/css && cp -r src/js/* dist/ && cp -r src/css dist/ ",
     "watch": "nodemon --watch src -e js,css,html --exec 'npm run build'",
-    "start": "npm run build && npm run dev"
+    "start": "npm run build && npm run dev && npm run watch"
 
   },
   "keywords": [

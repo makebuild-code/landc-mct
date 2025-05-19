@@ -71,7 +71,7 @@ function extractHeader(filePath) {
   
   // Fallback if no header found
   return `/**
- * FormChippy.js (Standalone)
+ * MBF.js (Standalone)
  * A smooth, vertical scrolling multi-step form experience
  *
  * @license MIT
@@ -80,7 +80,7 @@ function extractHeader(filePath) {
 
 // Build the standalone file
 function buildStandalone() {
-  console.log('Building standalone version of FormChippy...');
+  console.log('Building standalone version of MBF...');
   
   // Get header from main file and add IIFE start
   const header = extractHeader(srcMain);
