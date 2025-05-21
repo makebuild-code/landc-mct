@@ -13,7 +13,7 @@ import { calc_ElementSize } from "../hooks/calcs.js";
 export function scrollToQuestion(targetQuestion, container, index, updateButtons, animate = true) {
   // Measure question height
   const questionHeight = calc_ElementSize(targetQuestion);
-  const totalHeight = questionHeight.height + 40; // 20px padding top + bottom
+  const totalHeight = questionHeight.height + 20; // 20px padding top + bottom
 
   // Apply dynamic height and layout styling
   container.style.maxHeight = `${totalHeight}px`;

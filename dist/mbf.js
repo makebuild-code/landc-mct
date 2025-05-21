@@ -34,15 +34,21 @@ export default class MBFForm {
       this.currentQuestionIndex = 0;
       this.state = {};
 
+      // Summary
+      this.summarySection = this.form.querySelector('[data-mbf-question-slug=summary]')
+
       // Action buttons
       this.prevButton = this.form.querySelector('[data-mbf-button-action="prev"]');
       this.nextButton = this.form.querySelector('[data-mbf-button-action="next"]');
       this.resultsButton = this.form.querySelector('[data-mbf-button-action="submit"]');
       this.loadingForm = this.form.querySelector('[data-mbf-form-loading="loader"]')
+      this.loadingButtons = this.form.querySelector('[data-mbf-form-loading="buttons"]');
 
-      // sizes
-      
+      this.resetForm = document.querySelector('[data-mbf-button-header-action]');
+      this.resetFormText = document.querySelector('[data-mbf-header-button-text]');
 
+      this.progressNumerator = document.querySelector('[data-mbf-progress-fraction=numerator]');
+      this.progressDenominator = document.querySelector('[data-mbf-progress-fraction=denominator]');
       // Initialise
       this.init();
     }
@@ -50,34 +56,86 @@ export default class MBFForm {
     init() {
       // Attach input listeners for dynamic visibility
       this.loadForm();
-      this.hideInitialOnLoad()
+      this.setFormInit();
+      //this.setHideInitialOnLoad()
       this.setupEventListeners();
       this.updateButtons()
       // Attach nav listeners
       this.prevButton?.addEventListener('click', () => this.prev());
       this.nextButton?.addEventListener('click', () => this.next());
       this.resultsButton?.addEventListener('click', () => this.goToSlide(this.getVisibleSlides().length - 1));
+      this.resetForm?.addEventListener('click', this.resetForm());
   
       // calculations
       this.windowResize();
+
+      // Load Forms
+
+
+      // [data-mbf-form-loading] - Buttons Wrapper
+      // [data-mbf-form-slug]
 
 
       // Show first slide
     // this.goToSlide(0, false);
     }
 
-    hideInitialOnLoad() {
-      const groups = this.container.querySelectorAll('[data-mbf-group-name]');
-      
-      groups.forEach(group => {
-        const shouldHide = group.getAttribute('data-mbf-hidden-onload') === 'false';
-        if (shouldHide) {
-          group.style.display = 'none';
-        } else {
-          group.style.display = ''; // reset to default
+    setFormInit(){
+
+      // TODO: get formLoad Data and initialise handle - this.loadForm()
+      if(this.questions.length > 0){
+        this.setHideInitialOnLoad();
+
+        this.container.classList.remove('hide');
+        this.loadingButtons?.classList.remove('hide');
+
+        setTimeout(() => {
+          this.loadingForm?.classList.add('hide');
+        }, 50);
+
+        this.setInitialSizings();
+
+        // Scroll to top wrapper offsetTop - 50px
+        const topWrap = document.querySelector('.form-mbf_slide-list');
+        const showSticky = document.querySelector('.form-mbf_detail-sticky-wrap')
+        if (topWrap) {
+          const offset = topWrap.offsetTop ;
+          window.scrollTo({
+            top: offset,
+            behavior: 'smooth',
+          });
+          showSticky.classList.remove('hide');
         }
+      }
+    }
+
+    setInitialSizings() {
+      const firstVisible = this.getVisibleQuestions()[0];
+      if (firstVisible) {
+        scrollToQuestion(
+          firstVisible,
+          this.container,
+          0,
+          () => this.updateButtons?.(),
+          false 
+        );
+      }
+    }
+
+    setHideInitialOnLoad() {
+      const groups = this.container.querySelectorAll('[data-mbf-group-name]');
+    
+      groups.forEach(group => {
+        const shouldHideQuestions = group.getAttribute('data-mbf-hidden-onload') === 'false';
+    
+        const questions = group.querySelectorAll('[data-mbf-question-slug]');
+        
+        questions.forEach(question => {
+          question.style.display = shouldHideQuestions ? 'none' : '';
+        });
       });
     }
+    
 
     setupEventListeners(){
       this.container.addEventListener('click', e => {
@@ -120,6 +178,9 @@ export default class MBFForm {
     saveForm(){
       const data = saveFormData(this.container);
       handleConditionalVisibility(this.container, data); 
+
+      // Reset the questions list
+      this.getVisibleQuestions();
     }
 
     loadForm() {
@@ -145,13 +206,16 @@ export default class MBFForm {
       this.prevButton?.classList.toggle('hide', this.currentIndex === 0);
       this.nextButton?.classList.toggle('hide', this.currentIndex === slides.length - 1);
       this.resultsButton?.classList.toggle('hide', this.currentIndex !== slides.length - 1);
-      this.loadingForm?.classList.toggle('hide', this.currentIndex === 0);
     }
 
     goToQuestion(index, animate = true) {
-      if (index < 0 || index >= this.questions.length) return;
+
+      // revalidate number of questions
+
+      const visibleQuestions = this.getVisibleQuestions();
+      if (index < 0 || index >= visibleQuestions.length) return;
     
-      const targetQuestion = this.questions[index];
+      const targetQuestion = visibleQuestions[index];
     
       scrollToQuestion(
         targetQuestion,
@@ -162,20 +226,79 @@ export default class MBFForm {
       );
     
       this.currentQuestionIndex = index;
+      this.progressNumerator = document.querySelector('[data-mbf-progress-fraction=numerator]');
+      
+      if (this.progressNumerator) {
+        this.progressNumerator.textContent = this.currentQuestionIndex + 1;
+      }
+    
+      if (this.progressDenominator) {
+        this.progressDenominator.textContent = visibleQuestions.length;
+      }
     }
+    
 
     next() {
-      if(!validate_CurrentQuestion(this.questions,this.currentQuestionIndex)){
+      const visibleQuestions = this.getVisibleQuestions();
+      const currentQuestion = visibleQuestions[this.currentQuestionIndex];
+
+      if (!validate_CurrentQuestion(visibleQuestions, this.currentQuestionIndex)) {
         return;
       }
-      this.goToQuestion(this.currentQuestionIndex + 1);
+
+      if (this.currentQuestionIndex === visibleQuestions.length) {
+
+        this.submitForm();
+      }
+      
+      this.currentQuestionIndex++;
+      this.goToQuestion(this.currentQuestionIndex);
+      
     }
 
     prev() {
-      if(!validate_CurrentQuestion(this.questions,this.currentQuestionIndex)){
+      const visibleQuestions = this.getVisibleQuestions();
+      const currentQuestion = visibleQuestions[this.currentQuestionIndex];
+
+      if (!validate_CurrentQuestion(visibleQuestions, this.currentQuestionIndex)) {
         return;
       }
-      this.goToQuestion(this.currentQuestionIndex - 1);
+
+      this.currentQuestionIndex--;
+      this.goToQuestion(this.currentQuestionIndex);
+    }
+
+    submitForm() {
+      this.resultsButton.classList.remove('hide');
+    }
+
+    resetForm() {
+
+      this.currentQuestionIndex = 0;
+      
+      localStorage.removeItem('MBF_FORM_DATA');
+    
+      const inputs = this.container.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        if (input.type === 'radio' || input.type === 'checkbox') {
+          input.checked = false;
+        } else {
+          input.value = '';
+        }
+      });
+    
+      handleConditionalVisibility(this.container, {});
+      
+      const firstVisible = this.getVisibleQuestions()[0];
+      if (firstVisible) {
+        scrollToQuestion(
+          firstVisible,
+          this.container,
+          0,
+          () => this.updateButtons?.(),
+          false // no animation on reset
+        );
+      }
     }
 }
 

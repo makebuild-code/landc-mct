@@ -7,7 +7,6 @@ export function validate_CurrentQuestion(questions,currentIndex) {
   
     inputs.forEach(input => {
       const type = input.type;
-  
       if (type === 'radio' || type === 'checkbox') {
         if (input.checked) isAnswered = true;
       } else if (input.value.trim() !== '') {
